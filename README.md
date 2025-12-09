@@ -64,3 +64,4 @@
 - Clean Architecture 스캐폴딩 시작
 - prettier, import ordering 셋팅
 - prompt: server 레벨에서만 Authorization 호출하는 방식 -> next.js route 사용
+- search users api 를 서버 레벨에서만 호출되도록 구성
