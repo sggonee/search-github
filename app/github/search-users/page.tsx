@@ -9,17 +9,26 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ q
   const data = params.q ? await searchUsers(params) : { items: [] };
 
   return (
-    <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
+    <>
       <Search />
-      <ul>
-        {data.items.map((item: any) => {
-          return (
-            <li key={item.id}>
-              ({item.id}) {item.login}
-            </li>
-          );
-        })}
+      <ul
+        className="
+          w-full
+          sm:max-w-md
+          md:max-w-lg
+          lg:max-w-2xl
+          xl:max-w-3xl
+          mx-auto
+          space-y-2
+        "
+      >
+        {data.items.map((item: any) => (
+          <li key={item.id} className="border rounded px-3 py-2 flex gap-2 items-center">
+            <span className="text-xs text-gray-500">({item.id})</span>
+            <span>{item.login}</span>
+          </li>
+        ))}
       </ul>
-    </main>
+    </>
   );
 }

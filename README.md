@@ -67,3 +67,6 @@
 - search api 를 서버 레벨에서만 호출되도록 구성
 - search api filter 기본 설정 (ui 에서 sort 설정 옵션 지원 해야함)
 - update params hook 생성
+- update mui, tailwind css 적용
+- ThemeProvider hydration missmatch 발생 -> next.js 전용 `AppRouterCacheProvider` 을 설정하여 해결
+  - useMediaQuery 내부에서 window 를 찾지 못하는 이슈
