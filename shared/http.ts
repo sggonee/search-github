@@ -15,7 +15,6 @@ const _fetch = async (baseUrl: string, options?: Record<string, unknown>) => {
       if (!text) return;
       try {
         const data = JSON.parse(text);
-        console.log('fetch', data);
         if (!response.ok) return Promise.reject(data);
         return data;
       } catch (err) {
