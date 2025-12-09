@@ -9,7 +9,9 @@ const mergeOptions = (defaultOptions: Record<string, unknown>, mergedOptions: Re
   };
 };
 
-const _fetch = async (baseUrl: string, options?: Record<string, unknown>) => {
+const _fetch = async (path: string, options?: Record<string, unknown>) => {
+  const query = options?.params ? `?` + new URLSearchParams(options.params as URLSearchParams) : '';
+  const baseUrl = `${path}${query}`;
   return fetch(baseUrl, { ...options }).then((response: Response) => {
     return response.text().then((text) => {
       if (!text) return;
@@ -32,10 +34,6 @@ const _get = (baseUrl: string, options?: Record<string, unknown>) => {
   const mergedOptions = mergeOptions(
     {
       method: 'GET',
-      headers: {
-        Accept: 'application/vnd.github+json',
-        'X-GitHub-Api-Version': '2022-11-28',
-      },
     },
     options,
   );

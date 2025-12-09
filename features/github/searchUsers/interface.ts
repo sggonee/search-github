@@ -10,5 +10,5 @@ export interface GithubSearchUsers extends GithubUsersMeta {
 }
 
 export interface GitHubSearchUsersRepository {
-  search(query: string): Promise<GithubSearchUsers>;
+  search(params: Record<string, string>): Promise<GithubSearchUsers>;
 }
