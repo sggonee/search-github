@@ -56,6 +56,8 @@
 - [] Redux Toolkit
 - [] Cypress + Jest
 
-# 참고
+# 작업순서 기록
 
-- [octokit](https://github.com/octokit/octokit.js)
+- `pnpm create next-app@latest my-app --yes` 프로젝트 설정
+- `https://api.github.com/search/users` 연결 테스트
+- prompt: Clean Architecture + Modularity
