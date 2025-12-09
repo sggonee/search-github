@@ -48,9 +48,9 @@
 
 # Skill
 
-- [] Clean Architecture + Modularity
+- [x] Clean Architecture + Modularity
 - [x] pnpm + turbo
-- [] ESLint + Prettier
+- [x] ESLint + Prettier
 - [x] ES2023 + Next.js + TypeScript (Next.js App Router)
 - [] MUI + Tailwind CSS
 - [] Redux Toolkit
@@ -61,3 +61,6 @@
 - `pnpm create next-app@latest my-app --yes` 프로젝트 설정
 - `https://api.github.com/search/users` 연결 테스트
 - prompt: Clean Architecture + Modularity
+- Clean Architecture 스캐폴딩 시작
+- prettier, import ordering 셋팅
+- prompt: server 레벨에서만 Authorization 호출하는 방식 -> next.js route 사용
