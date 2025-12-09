@@ -1,7 +1,4 @@
-const mergeOptions = (
-  defaultOptions: Record<string, unknown>,
-  mergedOptions: Record<string, unknown> = {}
-) => {
+const mergeOptions = (defaultOptions: Record<string, unknown>, mergedOptions: Record<string, unknown> = {}) => {
   return {
     ...defaultOptions,
     ...mergedOptions,
@@ -18,14 +15,14 @@ const _fetch = async (baseUrl: string, options?: Record<string, unknown>) => {
       if (!text) return;
       try {
         const data = JSON.parse(text);
-        console.log("fetch", data);
+        console.log('fetch', data);
         if (!response.ok) return Promise.reject(data);
         return data;
       } catch (err) {
         return Promise.reject({
           code: 500,
-          message: "INTERNAL SERVER ERROR",
-          cause: "UNKNOWN ERROR",
+          message: 'INTERNAL SERVER ERROR',
+          cause: 'UNKNOWN ERROR',
         });
       }
     });
@@ -35,13 +32,13 @@ const _fetch = async (baseUrl: string, options?: Record<string, unknown>) => {
 const _get = (baseUrl: string, options?: Record<string, unknown>) => {
   const mergedOptions = mergeOptions(
     {
-      method: "GET",
+      method: 'GET',
       headers: {
-        Accept: "application/vnd.github+json",
-        "X-GitHub-Api-Version": "2022-11-28",
+        Accept: 'application/vnd.github+json',
+        'X-GitHub-Api-Version': '2022-11-28',
       },
     },
-    options
+    options,
   );
 
   return _fetch(baseUrl, mergedOptions);

@@ -1,7 +1,4 @@
-import type {
-  GitHubSearchUsersRepository,
-  GithubSearchUsers,
-} from "./interface";
+import type { GitHubSearchUsersRepository, GithubSearchUsers } from './interface';
 
 export function createSearchUsersService(repo: GitHubSearchUsersRepository) {
   return async (query: string): Promise<GithubSearchUsers> => {

@@ -1,4 +1,4 @@
-import { GithubUser } from "../user/interface";
+import { GithubUser } from '../user/interface';
 
 interface GithubUsersMeta {
   total_count: number;

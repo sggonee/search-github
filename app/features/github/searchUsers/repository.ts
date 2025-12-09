@@ -1,8 +1,5 @@
-import { getGithubUsers } from "@/app/shared/github";
-import type {
-  GitHubSearchUsersRepository,
-  GithubSearchUsers,
-} from "./interface";
+import { getGithubUsers } from '@/app/shared/github';
+import type { GitHubSearchUsersRepository, GithubSearchUsers } from './interface';
 
 export function createGitHubSearchUserRepository(): GitHubSearchUsersRepository {
   return {
