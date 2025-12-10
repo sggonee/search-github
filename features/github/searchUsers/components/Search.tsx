@@ -39,6 +39,7 @@ type SearchFormState = {
   language: string;
   followers: { min: number; max: number };
   created: string;
+  sponsorable: boolean;
 };
 
 const countries = getCountries();
@@ -82,6 +83,7 @@ const parseFormFromQuery = (q: string): SearchFormState => {
   let language = '';
   let followers = { min: 0, max: 10000 };
   let created = '';
+  let sponsorable = false;
 
   for (const token of tokens) {
     // type:user / type:org
@@ -128,6 +130,11 @@ const parseFormFromQuery = (q: string): SearchFormState => {
       continue;
     }
 
+    if (token === 'is:sponsorable') {
+      sponsorable = true;
+      continue;
+    }
+
     result.push(token);
   }
 
@@ -140,6 +147,7 @@ const parseFormFromQuery = (q: string): SearchFormState => {
     language,
     followers,
     created,
+    sponsorable,
   };
 };
 
@@ -154,6 +162,7 @@ const buildQueryFromForm = (formObj: Record<string, FormDataEntryValue>): string
   const repos = formObj.repos;
   const followersEnabled = formObj.followersEnabled;
   const followers = formObj.followers;
+  const sponsorable = formObj.sponsorable as string | undefined;
   const location = formObj.location;
   const language = formObj.language as string | undefined;
   const created = (formObj.created as string | undefined) || '';
@@ -185,7 +194,12 @@ const buildQueryFromForm = (formObj: Record<string, FormDataEntryValue>): string
     terms.push(`created:${created}`);
   }
 
-  // 6. 팔로워 수로 검색 (followers:)
+  // 6. 후원 가능 여부 (is:sponsorable)
+  if (sponsorable) {
+    terms.push('is:sponsorable');
+  }
+
+  // 7. 팔로워 수로 검색 (followers:)
   if (followersEnabled) {
     terms.push(`followers:${followers}`);
   }
@@ -475,6 +489,16 @@ const Search = () => {
             </Box>
             <input type="hidden" name="followers" defaultValue={`${followersRange[0]}..${followersRange[1]}`} />
           </Box>
+        </FormControl>
+
+        <FormControl component="fieldset" className="w-full mt-3">
+          <Typography variant="subtitle2" className="mb-1">
+            후원 가능 여부
+          </Typography>
+          <FormControlLabel
+            control={<Checkbox name="sponsorable" defaultChecked={persistParams.sponsorable} size="small" />}
+            label="후원 가능한 계정만 (is:sponsorable)"
+          />
         </FormControl>
       </Paper>
     </Box>

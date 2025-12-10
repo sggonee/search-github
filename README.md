@@ -82,3 +82,4 @@
 - prompt: 사용 언어 필터 추가 -> suggest ui 지원
 - prompt: 개인 계정 생성일 필터 추가 -> suggest ui 지원
 - prompt: 팔로워 수 필터 추가
+- prompt: 후원 가능 여부 필터 추가
