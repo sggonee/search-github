@@ -2,6 +2,7 @@
 
 import useSearch from '@/shared/hooks/useSearch';
 import { getCountries } from '@/shared/policy/country';
+import AddIcon from '@mui/icons-material/Add';
 import SearchIcon from '@mui/icons-material/Search';
 import {
   Autocomplete,
@@ -11,15 +12,30 @@ import {
   FormControlLabel,
   IconButton,
   InputAdornment,
+  List,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
   Paper,
-  Radio,
-  RadioGroup,
   Slider,
   TextField,
   Typography,
 } from '@mui/material';
 import { useSearchParams } from 'next/navigation';
 import { FormEvent, useMemo, useState } from 'react';
+const advancedFilters = [
+  { key: 'organization', label: 'Organization', targetId: 'filter-organization' },
+  { key: 'user', label: 'User', targetId: 'filter-user' },
+  { key: 'in-login', label: 'Username', targetId: 'filter-in-login' },
+  { key: 'in-name', label: 'Full name', targetId: 'filter-in-name' },
+  { key: 'in-email', label: 'Email', targetId: 'filter-in-email' },
+  { key: 'repos', label: 'Number of repositories', targetId: 'filter-repos' },
+  { key: 'followers', label: 'Number of followers', targetId: 'filter-followers' },
+  { key: 'location', label: 'Location', targetId: 'filter-location' },
+  { key: 'language', label: 'Language', targetId: 'filter-language' },
+  { key: 'created', label: 'Creation date', targetId: 'filter-created' },
+  { key: 'sponsorable', label: 'Sponsorable', targetId: 'filter-sponsorable' },
+];
 
 // Country option type
 interface CountryOption {
@@ -28,12 +44,10 @@ interface CountryOption {
 }
 
 type AccountType = 'all' | 'user' | 'org';
-type NameField = 'all' | 'login' | 'name' | 'email';
 
 type SearchFormState = {
   keyword: string;
   accountType: AccountType;
-  nameField: NameField;
   repos: { min: number; max: number };
   location: string;
   language: string;
@@ -78,7 +92,6 @@ const parseFormFromQuery = (q: string): SearchFormState => {
   const result: string[] = [];
 
   let accountType: AccountType = 'all';
-  let nameField: NameField = 'all';
   let repos = { min: 0, max: 10000 };
   let language = '';
   let followers = { min: 0, max: 10000 };
@@ -91,15 +104,6 @@ const parseFormFromQuery = (q: string): SearchFormState => {
       const [, type] = token.split(':');
       if (type === 'user' || type === 'org') {
         accountType = type;
-        continue;
-      }
-    }
-
-    // in:login / in:name / in:email
-    if (token.startsWith('in:')) {
-      const [, field] = token.split(':');
-      if (field === 'login' || field === 'name' || field === 'email') {
-        nameField = field;
         continue;
       }
     }
@@ -138,10 +142,11 @@ const parseFormFromQuery = (q: string): SearchFormState => {
     result.push(token);
   }
 
+  console.log('result', result);
+
   return {
     keyword: result.join(' '),
     accountType,
-    nameField,
     repos,
     location,
     language,
@@ -156,7 +161,6 @@ const buildQueryFromForm = (formObj: Record<string, FormDataEntryValue>): string
 
   const q = (formObj.q as string) ?? '';
   const accountType = formObj.accountType ?? 'all';
-  const nameField = formObj.nameField ?? 'all';
 
   const reposEnabled = formObj.reposEnabled;
   const repos = formObj.repos;
@@ -167,11 +171,9 @@ const buildQueryFromForm = (formObj: Record<string, FormDataEntryValue>): string
   const language = formObj.language as string | undefined;
   const created = (formObj.created as string | undefined) || '';
 
-  // 1. 키워드 + in: 필드 처리 (q는 required이므로 항상 존재)
-  if (nameField === 'all') {
+  // 1. 키워드 (q는 required이므로 항상 존재)
+  if (q) {
     terms.push(q);
-  } else {
-    terms.push(`${q} in:${nameField}`);
   }
 
   // 2. 계정 타입 처리
@@ -230,6 +232,34 @@ const Search = () => {
     persistParams.followers.min !== 0 || persistParams.followers.max !== 10000,
   );
 
+  const applyTypeFilter = (snippet: 'type:user' | 'type:org') => {
+    const input = document.querySelector('input[name="q"]') as HTMLInputElement | null;
+    if (!input) return;
+
+    const tokens = input.value.trim().split(/\s+/).filter(Boolean);
+    const filtered = tokens.filter((t) => t !== 'type:user' && t !== 'type:org');
+
+    // 새 스니펫 추가 (항상 하나만 유지)
+    filtered.push(snippet);
+
+    input.value = filtered.join(' ');
+    input.focus();
+  };
+
+  const applyInFilter = (snippet: 'in:login' | 'in:name' | 'in:email') => {
+    const input = document.querySelector('input[name="q"]') as HTMLInputElement | null;
+    if (!input) return;
+
+    const tokens = input.value.trim().split(/\s+/).filter(Boolean);
+    const filtered = tokens.filter((t) => t !== 'in:login' && t !== 'in:name' && t !== 'in:email');
+
+    // 새 스니펫 추가 (항상 하나만 유지)
+    filtered.push(snippet);
+
+    input.value = filtered.join(' ');
+    input.focus();
+  };
+
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
@@ -282,35 +312,47 @@ const Search = () => {
           }}
         />
 
-        {/* 사용자 또는 조직만 검색 (type:user / type:org) */}
-        <FormControl component="fieldset">
-          <Typography variant="subtitle2" className="mb-1">
-            계정 유형
+        {/* Advanced filters (GitHub-style) */}
+        <Box className="mt-4">
+          <Typography variant="subtitle2" className="mb-2">
+            Advanced
           </Typography>
-          <RadioGroup row defaultValue={persistParams.accountType} name="accountType">
-            <FormControlLabel value="all" control={<Radio />} label="전체 (사용자 + 조직)" />
-            <FormControlLabel value="user" control={<Radio />} label="사용자만 (type:user)" />
-            <FormControlLabel value="org" control={<Radio />} label="조직만 (type:org)" />
-          </RadioGroup>
-        </FormControl>
-
-        {/* 계정 이름, 성명 또는 메일로 검색 (in:login / in:name / in:email) */}
-        <FormControl component="fieldset">
-          <Typography variant="subtitle2" className="mb-1">
-            검색 대상
-          </Typography>
-          <RadioGroup row defaultValue={persistParams.nameField} name="nameField">
-            <FormControlLabel value="all" control={<Radio />} label="전체 (기본)" />
-            <FormControlLabel value="login" control={<Radio />} label="계정 이름 (in:login)" />
-            <FormControlLabel value="name" control={<Radio />} label="성명 (in:name)" />
-            <FormControlLabel value="email" control={<Radio />} label="이메일 (in:email)" />
-          </RadioGroup>
-        </FormControl>
+          <List dense disablePadding>
+            {advancedFilters.map((item) => (
+              <ListItemButton
+                key={item.key}
+                className="px-1"
+                onClick={() => {
+                  if (item.key === 'organization') {
+                    applyTypeFilter('type:org');
+                  }
+                  if (item.key === 'user') {
+                    applyTypeFilter('type:user');
+                  }
+                  if (item.key) {
+                    applyInFilter('in:login');
+                  }
+                  if (item.key === 'in-name') {
+                    applyInFilter('in:name');
+                  }
+                  if (item.key === 'in-email') {
+                    applyInFilter('in:email');
+                  }
+                }}
+              >
+                <ListItemIcon className="min-w-0 mr-2">
+                  <AddIcon fontSize="small" />
+                </ListItemIcon>
+                <ListItemText primary={item.label} />
+              </ListItemButton>
+            ))}
+          </List>
+        </Box>
 
         {/* 위치별 검색 (location:) + 사용 언어로 검색 (language:) - 2컬럼 레이아웃 */}
         <Box className="w-full flex flex-col md:flex-row gap-4 mb-1">
           {/* 위치별 검색 (location:) */}
-          <FormControl component="fieldset" className="w-full md:flex-1">
+          <FormControl component="fieldset" className="w-full md:flex-1" id="filter-location">
             <Typography variant="subtitle2" className="mb-1">
               위치별 검색
             </Typography>
@@ -347,7 +389,7 @@ const Search = () => {
           </FormControl>
 
           {/* 사용 언어로 검색 (language:) */}
-          <FormControl component="fieldset" className="w-full md:flex-1">
+          <FormControl component="fieldset" className="w-full md:flex-1" id="filter-language">
             <Typography variant="subtitle2" className="mb-1">
               사용 언어로 검색
             </Typography>
@@ -375,7 +417,7 @@ const Search = () => {
         </Box>
 
         {/* 개인 계정을 만든 시점별 검색 (created:) */}
-        <FormControl component="fieldset" className="w-full mb-1">
+        <FormControl component="fieldset" className="w-full mb-1" id="filter-created">
           <Typography variant="subtitle2" className="mb-1">
             개인 계정 생성일
           </Typography>
@@ -402,7 +444,7 @@ const Search = () => {
           <input type="hidden" name="created" defaultValue={persistParams.created} />
         </FormControl>
 
-        <FormControl component="fieldset" className="w-full">
+        <FormControl component="fieldset" className="w-full" id="filter-repos">
           <Box className="flex items-center justify-between mb-1">
             <Typography variant="subtitle2">리포지토리 수</Typography>
           </Box>
@@ -445,7 +487,7 @@ const Search = () => {
           </Box>
         </FormControl>
 
-        <FormControl component="fieldset" className="w-full mt-3">
+        <FormControl component="fieldset" className="w-full mt-3" id="filter-followers">
           <Box className="flex items-center justify-between mb-1">
             <Typography variant="subtitle2">팔로워 수</Typography>
           </Box>
@@ -491,7 +533,7 @@ const Search = () => {
           </Box>
         </FormControl>
 
-        <FormControl component="fieldset" className="w-full mt-3">
+        <FormControl component="fieldset" className="w-full mt-3" id="filter-sponsorable">
           <Typography variant="subtitle2" className="mb-1">
             후원 가능 여부
           </Typography>
