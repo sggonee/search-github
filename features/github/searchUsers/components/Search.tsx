@@ -37,6 +37,7 @@ type SearchFormState = {
   repos: { min: number; max: number };
   location: string;
   language: string;
+  followers: { min: number; max: number };
   created: string;
 };
 
@@ -77,8 +78,9 @@ const parseFormFromQuery = (q: string): SearchFormState => {
 
   let accountType: AccountType = 'all';
   let nameField: NameField = 'all';
-  let repos = { min: 0, max: 1000 };
+  let repos = { min: 0, max: 10000 };
   let language = '';
+  let followers = { min: 0, max: 10000 };
   let created = '';
 
   for (const token of tokens) {
@@ -102,7 +104,7 @@ const parseFormFromQuery = (q: string): SearchFormState => {
 
     if (token.startsWith('repos:')) {
       const [, range] = token.split(':');
-      const [min, max] = range?.split('..').map(Number) ?? [0, 1000];
+      const [min, max] = range?.split('..').map(Number) ?? [0, 10000];
       repos = { min, max };
       continue;
     }
@@ -110,6 +112,13 @@ const parseFormFromQuery = (q: string): SearchFormState => {
     if (token.startsWith('language:')) {
       const [, lang] = token.split(':');
       language = lang;
+      continue;
+    }
+
+    if (token.startsWith('followers:')) {
+      const [, range] = token.split(':');
+      const [min, max] = range?.split('..').map(Number) ?? [0, 10000];
+      followers = { min, max };
       continue;
     }
 
@@ -129,6 +138,7 @@ const parseFormFromQuery = (q: string): SearchFormState => {
     repos,
     location,
     language,
+    followers,
     created,
   };
 };
@@ -142,6 +152,8 @@ const buildQueryFromForm = (formObj: Record<string, FormDataEntryValue>): string
 
   const reposEnabled = formObj.reposEnabled;
   const repos = formObj.repos;
+  const followersEnabled = formObj.followersEnabled;
+  const followers = formObj.followers;
   const location = formObj.location;
   const language = formObj.language as string | undefined;
   const created = (formObj.created as string | undefined) || '';
@@ -173,6 +185,11 @@ const buildQueryFromForm = (formObj: Record<string, FormDataEntryValue>): string
     terms.push(`created:${created}`);
   }
 
+  // 6. 팔로워 수로 검색 (followers:)
+  if (followersEnabled) {
+    terms.push(`followers:${followers}`);
+  }
+
   // 활성화 상태이고, repos 값이 기본 범위가 아닐 때만 조건으로 추가
   if (reposEnabled) {
     terms.push(`repos:${repos}`);
@@ -189,7 +206,15 @@ const Search = () => {
   const persistParams = useMemo(() => parseFormFromQuery(q), [q]);
 
   const [reposRange, setReposRange] = useState<[number, number]>([persistParams.repos.min, persistParams.repos.max]);
-  const [reposEnabled, setReposEnabled] = useState(persistParams.repos.min !== 0 || persistParams.repos.max !== 1000);
+  const [reposEnabled, setReposEnabled] = useState(persistParams.repos.min !== 0 || persistParams.repos.max !== 10000);
+
+  const [followersRange, setFollowersRange] = useState<[number, number]>([
+    persistParams.followers.min,
+    persistParams.followers.max,
+  ]);
+  const [followersEnabled, setFollowersEnabled] = useState(
+    persistParams.followers.min !== 0 || persistParams.followers.max !== 10000,
+  );
 
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -377,7 +402,7 @@ const Search = () => {
                     setReposEnabled(checked);
                     const form = document.querySelector('form');
                     const input = form!.querySelector('input[name="repos"]') as HTMLInputElement | null;
-                    input!.value = checked ? `${reposRange[0]}..${reposRange[1]}` : '0..1000';
+                    input!.value = checked ? `${reposRange[0]}..${reposRange[1]}` : '0..10000';
                   }}
                   size="small"
                 />
@@ -389,7 +414,7 @@ const Search = () => {
               <Slider
                 value={reposRange}
                 min={0}
-                max={1000}
+                max={10000}
                 valueLabelDisplay="auto"
                 onChange={(_, value) => {
                   const [min, max] = value as number[];
@@ -403,6 +428,52 @@ const Search = () => {
             </Box>
 
             <input type="hidden" name="repos" defaultValue={`${reposRange[0]}..${reposRange[1]}`} />
+          </Box>
+        </FormControl>
+
+        <FormControl component="fieldset" className="w-full mt-3">
+          <Box className="flex items-center justify-between mb-1">
+            <Typography variant="subtitle2">팔로워 수</Typography>
+          </Box>
+          <Box className="gap-2">
+            <FormControlLabel
+              control={
+                <Checkbox
+                  name="followersEnabled"
+                  checked={followersEnabled}
+                  onChange={(_, checked) => {
+                    setFollowersEnabled(checked);
+                    const form = document.querySelector('form');
+                    const input = form!.querySelector('input[name="followers"]') as HTMLInputElement | null;
+                    if (input) {
+                      input.value = checked ? `${followersRange[0]}..${followersRange[1]}` : '0..10000';
+                    }
+                  }}
+                  size="small"
+                />
+              }
+              label="활성화"
+              className="whitespace-nowrap"
+            />
+            <Box>
+              <Slider
+                value={followersRange}
+                min={0}
+                max={10000}
+                valueLabelDisplay="auto"
+                onChange={(_, value) => {
+                  const [min, max] = value as number[];
+                  setFollowersRange([min, max]);
+                  const form = document.querySelector('form');
+                  const input = form!.querySelector('input[name="followers"]') as HTMLInputElement | null;
+                  if (input) {
+                    input.value = `${min}..${max}`;
+                  }
+                }}
+                disabled={!followersEnabled}
+              />
+            </Box>
+            <input type="hidden" name="followers" defaultValue={`${followersRange[0]}..${followersRange[1]}`} />
           </Box>
         </FormControl>
       </Paper>

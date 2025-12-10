@@ -73,11 +73,12 @@
 - search api filter
   - https://docs.github.com/ko/search-github/searching-on-github/searching-users (필터 타입)
   - https://docs.github.com/ko/rest/search/search?apiVersion=2022-11-28#constructing-a-search-query (검색 쿼리 생성 규칙)
-- 사용자 또는 조직만 검색 → type:user / type:org
-- 계정 이름, 성명 또는 메일로 검색 → in:login / in:name / in:email
-- uncontrolled form 변경
-- input 공백 입력 금지 패턴 추가
-- 레포지토리 수 필터 추가 -> repos:0..1000 형태로 지원
-- 국가 필터 추가 -> suggest ui 지원
-- 사용 언어 필터 추가 -> suggest ui 지원
-- 개인 계정 생성일 필터 추가 -> suggest ui 지원
+- prompt: 사용자 또는 조직만 검색 → type:user / type:org
+- prompt: 계정 이름, 성명 또는 메일로 검색 → in:login / in:name / in:email
+- prompt: uncontrolled form 변경
+- prompt: input 공백 입력 금지 패턴 추가
+- prompt: 레포지토리 수 필터 추가 -> repos:0..1000 형태로 지원
+- prompt: 국가 필터 추가 -> suggest ui 지원
+- prompt: 사용 언어 필터 추가 -> suggest ui 지원
+- prompt: 개인 계정 생성일 필터 추가 -> suggest ui 지원
+- prompt: 팔로워 수 필터 추가
