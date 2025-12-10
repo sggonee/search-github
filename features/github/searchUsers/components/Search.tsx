@@ -1,8 +1,10 @@
 'use client';
 
 import useSearch from '@/shared/hooks/useSearch';
+import { getCountries } from '@/shared/policy/country';
 import SearchIcon from '@mui/icons-material/Search';
 import {
+  Autocomplete,
   Box,
   Checkbox,
   FormControl,
@@ -19,6 +21,12 @@ import {
 import { useSearchParams } from 'next/navigation';
 import { FormEvent, useMemo, useState } from 'react';
 
+// Country option type
+interface CountryOption {
+  code: string;
+  name: string;
+}
+
 type AccountType = 'all' | 'user' | 'org';
 type NameField = 'all' | 'login' | 'name' | 'email';
 
@@ -27,15 +35,47 @@ type SearchFormState = {
   accountType: AccountType;
   nameField: NameField;
   repos: { min: number; max: number };
+  location: string;
+  language: string;
 };
 
+const countries = getCountries();
+
+const languages = [
+  'TypeScript',
+  'JavaScript',
+  'Python',
+  'Java',
+  'Go',
+  'Rust',
+  'C',
+  'C++',
+  'C#',
+  'PHP',
+  'Ruby',
+  'Kotlin',
+  'Swift',
+];
+
 const parseFormFromQuery = (q: string): SearchFormState => {
-  const tokens = q.trim().split(/\s+/).filter(Boolean);
+  // location: 뒤에 오는 문자열(공백 포함)을 다음 qualifier(type:/in:/repos:/location:) 전까지 캡처
+  let location = '';
+  const locationMatch = q.match(/(?:^|\s)location:([\s\S]*?)(?=(\s+\w+:|$))/);
+
+  let cleanedQ = q;
+  if (locationMatch) {
+    const locRaw = locationMatch[1].trim();
+    location = locRaw;
+    cleanedQ = cleanedQ.replace(locationMatch[0], ' ');
+  }
+
+  const tokens = cleanedQ.trim().split(/\s+/).filter(Boolean);
   const result: string[] = [];
 
   let accountType: AccountType = 'all';
   let nameField: NameField = 'all';
   let repos = { min: 0, max: 1000 };
+  let language = '';
 
   for (const token of tokens) {
     // type:user / type:org
@@ -63,6 +103,12 @@ const parseFormFromQuery = (q: string): SearchFormState => {
       continue;
     }
 
+    if (token.startsWith('language:')) {
+      const [, lang] = token.split(':');
+      language = lang;
+      continue;
+    }
+
     result.push(token);
   }
 
@@ -71,6 +117,8 @@ const parseFormFromQuery = (q: string): SearchFormState => {
     accountType,
     nameField,
     repos,
+    location,
+    language,
   };
 };
 
@@ -83,6 +131,8 @@ const buildQueryFromForm = (formObj: Record<string, FormDataEntryValue>): string
 
   const reposEnabled = formObj.reposEnabled;
   const repos = formObj.repos;
+  const location = formObj.location;
+  const language = formObj.language as string | undefined;
 
   // 1. 키워드 + in: 필드 처리 (q는 required이므로 항상 존재)
   if (nameField === 'all') {
@@ -94,6 +144,16 @@ const buildQueryFromForm = (formObj: Record<string, FormDataEntryValue>): string
   // 2. 계정 타입 처리
   if (accountType !== 'all') {
     terms.push(`type:${accountType}`);
+  }
+
+  // 3. 위치별 검색 (location:)
+  if (location) {
+    terms.push(`location:${encodeURIComponent(location as string)}`);
+  }
+
+  // 4. 사용 언어로 검색 (language:)
+  if (language) {
+    terms.push(`language:${language}`);
   }
 
   // 활성화 상태이고, repos 값이 기본 범위가 아닐 때만 조건으로 추가
@@ -112,7 +172,7 @@ const Search = () => {
   const persistParams = useMemo(() => parseFormFromQuery(q), [q]);
 
   const [reposRange, setReposRange] = useState<[number, number]>([persistParams.repos.min, persistParams.repos.max]);
-  const [reposEnabled, setReposEnabled] = useState(!!persistParams.repos);
+  const [reposEnabled, setReposEnabled] = useState(persistParams.repos.min !== 0 || persistParams.repos.max !== 1000);
 
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -148,7 +208,6 @@ const Search = () => {
           placeholder="사용자 이름 또는 키워드를 입력하세요"
           defaultValue={persistParams.keyword}
           name="q"
-          required
           slotProps={{
             input: {
               inputProps: {
@@ -192,6 +251,70 @@ const Search = () => {
           </RadioGroup>
         </FormControl>
 
+        {/* 위치별 검색 (location:) */}
+        <FormControl component="fieldset" className="w-full mb-1">
+          <Typography variant="subtitle2" className="mb-1">
+            위치별 검색
+          </Typography>
+          <Autocomplete<CountryOption, false, false, true>
+            freeSolo
+            options={Object.entries(countries).map(([code, name]) => ({ code, name }))}
+            getOptionLabel={(option) => (typeof option === 'string' ? option : option.name)}
+            defaultValue={persistParams.location || ''}
+            onChange={(_, value) => {
+              const form = document.querySelector('form');
+              const input = form!.querySelector('input[name="location"]') as HTMLInputElement | null;
+              if (value && typeof value !== 'string') {
+                input!.value = value.name;
+              } else {
+                input!.value = value || '';
+              }
+            }}
+            renderOption={(props, option: CountryOption) => (
+              <li {...props} key={option.code}>
+                {option.name} ({option.code.toUpperCase()})
+              </li>
+            )}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                variant="standard"
+                placeholder="국가를 입력하세요"
+                name="locationDisplay"
+                autoComplete="off"
+              />
+            )}
+          />
+          <input type="hidden" name="location" defaultValue={persistParams.location} />
+        </FormControl>
+
+        {/* 사용 언어로 검색 (language:) */}
+        <FormControl component="fieldset" className="w-full mb-1">
+          <Typography variant="subtitle2" className="mb-1">
+            사용 언어로 검색
+          </Typography>
+          <Autocomplete<string, false, false, true>
+            freeSolo
+            options={languages}
+            defaultValue={persistParams.language || ''}
+            onChange={(_, value) => {
+              const form = document.querySelector('form');
+              const input = form!.querySelector('input[name="language"]') as HTMLInputElement | null;
+              input!.value = value ?? '';
+            }}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                variant="standard"
+                placeholder="예: TypeScript, JavaScript, Python"
+                name="languageDisplay"
+                autoComplete="off"
+              />
+            )}
+          />
+          <input type="hidden" name="language" defaultValue={persistParams.language} />
+        </FormControl>
+
         <FormControl component="fieldset" className="w-full">
           <Box className="flex items-center justify-between mb-1">
             <Typography variant="subtitle2">리포지토리 수</Typography>
@@ -205,10 +328,8 @@ const Search = () => {
                   onChange={(_, checked) => {
                     setReposEnabled(checked);
                     const form = document.querySelector('form');
-                    const reposInput = form!.querySelector('input[name="repos"]') as HTMLInputElement | null;
-                    if (reposInput) {
-                      reposInput.value = checked ? `${reposRange[0]}..${reposRange[1]}` : '0..1000';
-                    }
+                    const input = form!.querySelector('input[name="repos"]') as HTMLInputElement | null;
+                    input!.value = checked ? `${reposRange[0]}..${reposRange[1]}` : '0..1000';
                   }}
                   size="small"
                 />
@@ -226,12 +347,8 @@ const Search = () => {
                   const [min, max] = value as number[];
                   setReposRange([min, max]);
                   const form = document.querySelector('form');
-                  if (form) {
-                    const reposInput = form.querySelector('input[name="repos"]') as HTMLInputElement | null;
-                    if (reposInput) {
-                      reposInput.value = `${min}..${max}`;
-                    }
-                  }
+                  const input = form!.querySelector('input[name="repos"]') as HTMLInputElement | null;
+                  input!.value = `${min}..${max}`;
                 }}
                 disabled={!reposEnabled}
               />
