@@ -65,15 +65,15 @@ const parseFormFromQuery = (q: string): SearchFormState => {
 const buildQueryFromForm = (formObj: Record<string, FormDataEntryValue>): string => {
   const terms: string[] = [];
 
-  const rawKeyword = formObj.q ?? '';
+  const q = (formObj.q as string) ?? '';
   const accountType = formObj.accountType ?? 'all';
   const nameField = formObj.nameField ?? 'all';
 
   // 1. 키워드 + in: 필드 처리 (q는 required이므로 항상 존재)
   if (nameField === 'all') {
-    terms.push(rawKeyword as string);
+    terms.push(q);
   } else {
-    terms.push(`${rawKeyword} in:${nameField}`);
+    terms.push(`${q} in:${nameField}`);
   }
 
   // 2. 계정 타입 처리
@@ -128,6 +128,10 @@ const Search = () => {
           required
           slotProps={{
             input: {
+              inputProps: {
+                pattern: '.*\\S.*',
+                title: '공백만 입력할 수 없습니다.',
+              },
               endAdornment: (
                 <InputAdornment position="end">
                   <IconButton type="submit" size="small" aria-label="검색">

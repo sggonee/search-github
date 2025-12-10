@@ -76,3 +76,4 @@
 - 사용자 또는 조직만 검색 → type:user / type:org
 - 계정 이름, 성명 또는 메일로 검색 → in:login / in:name / in:email
 - uncontrolled form 변경
+- input 공백 입력 금지 패턴 추가
