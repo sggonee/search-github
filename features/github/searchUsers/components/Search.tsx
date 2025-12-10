@@ -268,69 +268,72 @@ const Search = () => {
           </RadioGroup>
         </FormControl>
 
-        {/* 위치별 검색 (location:) */}
-        <FormControl component="fieldset" className="w-full mb-1">
-          <Typography variant="subtitle2" className="mb-1">
-            위치별 검색
-          </Typography>
-          <Autocomplete<CountryOption, false, false, true>
-            freeSolo
-            options={Object.entries(countries).map(([code, name]) => ({ code, name }))}
-            getOptionLabel={(option) => (typeof option === 'string' ? option : option.name)}
-            defaultValue={persistParams.location || ''}
-            onChange={(_, value) => {
-              const form = document.querySelector('form');
-              const input = form!.querySelector('input[name="location"]') as HTMLInputElement | null;
-              if (value && typeof value !== 'string') {
-                input!.value = value.name;
-              } else {
-                input!.value = value || '';
-              }
-            }}
-            renderOption={(props, option: CountryOption) => (
-              <li {...props} key={option.code}>
-                {option.name} ({option.code.toUpperCase()})
-              </li>
-            )}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                variant="standard"
-                placeholder="국가를 입력하세요"
-                name="locationDisplay"
-                autoComplete="off"
-              />
-            )}
-          />
-          <input type="hidden" name="location" defaultValue={persistParams.location} />
-        </FormControl>
+        {/* 위치별 검색 (location:) + 사용 언어로 검색 (language:) - 2컬럼 레이아웃 */}
+        <Box className="w-full flex flex-col md:flex-row gap-4 mb-1">
+          {/* 위치별 검색 (location:) */}
+          <FormControl component="fieldset" className="w-full md:flex-1">
+            <Typography variant="subtitle2" className="mb-1">
+              위치별 검색
+            </Typography>
+            <Autocomplete<CountryOption, false, false, true>
+              freeSolo
+              options={Object.entries(countries).map(([code, name]) => ({ code, name }))}
+              getOptionLabel={(option) => (typeof option === 'string' ? option : option.name)}
+              defaultValue={persistParams.location || ''}
+              onChange={(_, value) => {
+                const form = document.querySelector('form');
+                const input = form!.querySelector('input[name="location"]') as HTMLInputElement | null;
+                if (value && typeof value !== 'string') {
+                  input!.value = value.name;
+                } else {
+                  input!.value = value || '';
+                }
+              }}
+              renderOption={(props, option: CountryOption) => (
+                <li {...props} key={option.code}>
+                  {option.name} ({option.code.toUpperCase()})
+                </li>
+              )}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  variant="standard"
+                  placeholder="국가를 입력하세요"
+                  name="locationDisplay"
+                  autoComplete="off"
+                />
+              )}
+            />
+            <input type="hidden" name="location" defaultValue={persistParams.location} />
+          </FormControl>
 
-        {/* 사용 언어로 검색 (language:) */}
-        <FormControl component="fieldset" className="w-full mb-1">
-          <Typography variant="subtitle2" className="mb-1">
-            사용 언어로 검색
-          </Typography>
-          <Autocomplete<string, false, false, true>
-            freeSolo
-            options={languages}
-            defaultValue={persistParams.language || ''}
-            onChange={(_, value) => {
-              const form = document.querySelector('form');
-              const input = form!.querySelector('input[name="language"]') as HTMLInputElement | null;
-              input!.value = value ?? '';
-            }}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                variant="standard"
-                placeholder="예: TypeScript, JavaScript, Python"
-                name="languageDisplay"
-                autoComplete="off"
-              />
-            )}
-          />
-          <input type="hidden" name="language" defaultValue={persistParams.language} />
-        </FormControl>
+          {/* 사용 언어로 검색 (language:) */}
+          <FormControl component="fieldset" className="w-full md:flex-1">
+            <Typography variant="subtitle2" className="mb-1">
+              사용 언어로 검색
+            </Typography>
+            <Autocomplete<string, false, false, true>
+              freeSolo
+              options={languages}
+              defaultValue={persistParams.language || ''}
+              onChange={(_, value) => {
+                const form = document.querySelector('form');
+                const input = form!.querySelector('input[name="language"]') as HTMLInputElement | null;
+                input!.value = value ?? '';
+              }}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  variant="standard"
+                  placeholder="예: TypeScript, JavaScript, Python"
+                  name="languageDisplay"
+                  autoComplete="off"
+                />
+              )}
+            />
+            <input type="hidden" name="language" defaultValue={persistParams.language} />
+          </FormControl>
+        </Box>
 
         {/* 개인 계정을 만든 시점별 검색 (created:) */}
         <FormControl component="fieldset" className="w-full mb-1">
