@@ -4,6 +4,7 @@ import useSearch from '@/shared/hooks/useSearch';
 import SearchIcon from '@mui/icons-material/Search';
 import {
   Box,
+  Checkbox,
   FormControl,
   FormControlLabel,
   IconButton,
@@ -11,11 +12,12 @@ import {
   Paper,
   Radio,
   RadioGroup,
+  Slider,
   TextField,
   Typography,
 } from '@mui/material';
 import { useSearchParams } from 'next/navigation';
-import { FormEvent, useMemo } from 'react';
+import { FormEvent, useMemo, useState } from 'react';
 
 type AccountType = 'all' | 'user' | 'org';
 type NameField = 'all' | 'login' | 'name' | 'email';
@@ -24,14 +26,16 @@ type SearchFormState = {
   keyword: string;
   accountType: AccountType;
   nameField: NameField;
+  repos: { min: number; max: number };
 };
 
 const parseFormFromQuery = (q: string): SearchFormState => {
   const tokens = q.trim().split(/\s+/).filter(Boolean);
+  const result: string[] = [];
 
   let accountType: AccountType = 'all';
   let nameField: NameField = 'all';
-  const keywordTokens: string[] = [];
+  let repos = { min: 0, max: 1000 };
 
   for (const token of tokens) {
     // type:user / type:org
@@ -52,13 +56,21 @@ const parseFormFromQuery = (q: string): SearchFormState => {
       }
     }
 
-    keywordTokens.push(token);
+    if (token.startsWith('repos:')) {
+      const [, range] = token.split(':');
+      const [min, max] = range?.split('..').map(Number) ?? [0, 1000];
+      repos = { min, max };
+      continue;
+    }
+
+    result.push(token);
   }
 
   return {
-    keyword: keywordTokens.join(' '),
+    keyword: result.join(' '),
     accountType,
     nameField,
+    repos,
   };
 };
 
@@ -68,6 +80,9 @@ const buildQueryFromForm = (formObj: Record<string, FormDataEntryValue>): string
   const q = (formObj.q as string) ?? '';
   const accountType = formObj.accountType ?? 'all';
   const nameField = formObj.nameField ?? 'all';
+
+  const reposEnabled = formObj.reposEnabled;
+  const repos = formObj.repos;
 
   // 1. 키워드 + in: 필드 처리 (q는 required이므로 항상 존재)
   if (nameField === 'all') {
@@ -81,6 +96,11 @@ const buildQueryFromForm = (formObj: Record<string, FormDataEntryValue>): string
     terms.push(`type:${accountType}`);
   }
 
+  // 활성화 상태이고, repos 값이 기본 범위가 아닐 때만 조건으로 추가
+  if (reposEnabled) {
+    terms.push(`repos:${repos}`);
+  }
+
   return terms.join(' ');
 };
 
@@ -90,6 +110,9 @@ const Search = () => {
 
   const q = searchParams.get('q') ?? '';
   const persistParams = useMemo(() => parseFormFromQuery(q), [q]);
+
+  const [reposRange, setReposRange] = useState<[number, number]>([persistParams.repos.min, persistParams.repos.max]);
+  const [reposEnabled, setReposEnabled] = useState(!!persistParams.repos);
 
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -167,6 +190,55 @@ const Search = () => {
             <FormControlLabel value="name" control={<Radio />} label="성명 (in:name)" />
             <FormControlLabel value="email" control={<Radio />} label="이메일 (in:email)" />
           </RadioGroup>
+        </FormControl>
+
+        <FormControl component="fieldset" className="w-full">
+          <Box className="flex items-center justify-between mb-1">
+            <Typography variant="subtitle2">리포지토리 수</Typography>
+          </Box>
+          <Box className="gap-2">
+            <FormControlLabel
+              control={
+                <Checkbox
+                  name="reposEnabled"
+                  checked={reposEnabled}
+                  onChange={(_, checked) => {
+                    setReposEnabled(checked);
+                    const form = document.querySelector('form');
+                    const reposInput = form!.querySelector('input[name="repos"]') as HTMLInputElement | null;
+                    if (reposInput) {
+                      reposInput.value = checked ? `${reposRange[0]}..${reposRange[1]}` : '0..1000';
+                    }
+                  }}
+                  size="small"
+                />
+              }
+              label="활성화"
+              className="whitespace-nowrap"
+            />
+            <Box>
+              <Slider
+                value={reposRange}
+                min={0}
+                max={1000}
+                valueLabelDisplay="auto"
+                onChange={(_, value) => {
+                  const [min, max] = value as number[];
+                  setReposRange([min, max]);
+                  const form = document.querySelector('form');
+                  if (form) {
+                    const reposInput = form.querySelector('input[name="repos"]') as HTMLInputElement | null;
+                    if (reposInput) {
+                      reposInput.value = `${min}..${max}`;
+                    }
+                  }
+                }}
+                disabled={!reposEnabled}
+              />
+            </Box>
+
+            <input type="hidden" name="repos" defaultValue={`${reposRange[0]}..${reposRange[1]}`} />
+          </Box>
         </FormControl>
       </Paper>
     </Box>

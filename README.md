@@ -77,3 +77,4 @@
 - 계정 이름, 성명 또는 메일로 검색 → in:login / in:name / in:email
 - uncontrolled form 변경
 - input 공백 입력 금지 패턴 추가
+- 레포지토리 수 필터 추가 -> repos:0..1000 형태로 지원

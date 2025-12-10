@@ -10,7 +10,7 @@ const useSearch = () => {
     Object.entries(params).forEach(([key, value]) => {
       value ? result.set(key, value) : result.delete(key);
     });
-    window.history.pushState(null, '', `?${result.toString()}`);
+    window.history.pushState(null, '', `?${decodeURIComponent(result.toString())}`);
   };
 
   return { updateParams };
