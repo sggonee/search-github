@@ -37,6 +37,7 @@ type SearchFormState = {
   repos: { min: number; max: number };
   location: string;
   language: string;
+  created: string;
 };
 
 const countries = getCountries();
@@ -57,6 +58,8 @@ const languages = [
   'Swift',
 ];
 
+const createdSuggestions = ['2025-12-10', '>2025-12-07', '>2025-12-01', '>2025-01-01'];
+
 const parseFormFromQuery = (q: string): SearchFormState => {
   // location: 뒤에 오는 문자열(공백 포함)을 다음 qualifier(type:/in:/repos:/location:) 전까지 캡처
   let location = '';
@@ -76,6 +79,7 @@ const parseFormFromQuery = (q: string): SearchFormState => {
   let nameField: NameField = 'all';
   let repos = { min: 0, max: 1000 };
   let language = '';
+  let created = '';
 
   for (const token of tokens) {
     // type:user / type:org
@@ -109,6 +113,12 @@ const parseFormFromQuery = (q: string): SearchFormState => {
       continue;
     }
 
+    if (token.startsWith('created:')) {
+      const [, expr] = token.split(':');
+      created = expr;
+      continue;
+    }
+
     result.push(token);
   }
 
@@ -119,6 +129,7 @@ const parseFormFromQuery = (q: string): SearchFormState => {
     repos,
     location,
     language,
+    created,
   };
 };
 
@@ -133,6 +144,7 @@ const buildQueryFromForm = (formObj: Record<string, FormDataEntryValue>): string
   const repos = formObj.repos;
   const location = formObj.location;
   const language = formObj.language as string | undefined;
+  const created = (formObj.created as string | undefined) || '';
 
   // 1. 키워드 + in: 필드 처리 (q는 required이므로 항상 존재)
   if (nameField === 'all') {
@@ -154,6 +166,11 @@ const buildQueryFromForm = (formObj: Record<string, FormDataEntryValue>): string
   // 4. 사용 언어로 검색 (language:)
   if (language) {
     terms.push(`language:${language}`);
+  }
+
+  // 5. 개인 계정을 만든 시점별 검색 (created:)
+  if (created) {
+    terms.push(`created:${created}`);
   }
 
   // 활성화 상태이고, repos 값이 기본 범위가 아닐 때만 조건으로 추가
@@ -313,6 +330,34 @@ const Search = () => {
             )}
           />
           <input type="hidden" name="language" defaultValue={persistParams.language} />
+        </FormControl>
+
+        {/* 개인 계정을 만든 시점별 검색 (created:) */}
+        <FormControl component="fieldset" className="w-full mb-1">
+          <Typography variant="subtitle2" className="mb-1">
+            개인 계정 생성일
+          </Typography>
+          <Autocomplete<string, false, false, true>
+            freeSolo
+            options={createdSuggestions}
+            defaultValue={persistParams.created || ''}
+            onChange={(_, value) => {
+              const form = document.querySelector('form');
+              const input = form!.querySelector('input[name="created"]') as HTMLInputElement | null;
+              if (!input) return;
+              input.value = value ?? '';
+            }}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                variant="standard"
+                placeholder="예: 2025-12-10, >2025-12-07"
+                name="createdDisplay"
+                autoComplete="off"
+              />
+            )}
+          />
+          <input type="hidden" name="created" defaultValue={persistParams.created} />
         </FormControl>
 
         <FormControl component="fieldset" className="w-full">
