@@ -70,3 +70,6 @@
 - update mui, tailwind css 적용
 - ThemeProvider hydration missmatch 발생 -> next.js 전용 `AppRouterCacheProvider` 을 설정하여 해결
   - useMediaQuery 내부에서 window 를 찾지 못하는 이슈
+- search api filter
+  - https://docs.github.com/ko/search-github/searching-on-github/searching-users (필터 타입)
+  - https://docs.github.com/ko/rest/search/search?apiVersion=2022-11-28#constructing-a-search-query (검색 쿼리 생성 규칙)

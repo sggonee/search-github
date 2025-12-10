@@ -22,10 +22,9 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ q
           space-y-2
         "
       >
-        {data.items.map((item: any) => (
+        {data.items.map((item) => (
           <li key={item.id} className="border rounded px-3 py-2 flex gap-2 items-center">
-            <span className="text-xs text-gray-500">({item.id})</span>
-            <span>{item.login}</span>
+            {item.login}
           </li>
         ))}
       </ul>
