@@ -73,3 +73,6 @@
 - search api filter
   - https://docs.github.com/ko/search-github/searching-on-github/searching-users (필터 타입)
   - https://docs.github.com/ko/rest/search/search?apiVersion=2022-11-28#constructing-a-search-query (검색 쿼리 생성 규칙)
+- 사용자 또는 조직만 검색 → type:user / type:org
+- 계정 이름, 성명 또는 메일로 검색 → in:login / in:name / in:email
+- uncontrolled form 변경
