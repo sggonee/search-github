@@ -60,10 +60,10 @@
 
 - `pnpm create next-app@latest my-app --yes` 프로젝트 설정
 - `https://api.github.com/search/users` 연결 테스트
-- prompt: Clean Architecture + Modularity
+- Clean Architecture + Modularity
 - Clean Architecture 스캐폴딩 시작
 - prettier, import ordering 셋팅
-- prompt: server 레벨에서만 Authorization 호출하는 방식 -> next.js route 사용
+- server 레벨에서만 Authorization 호출하는 방식 -> next.js route 사용
 - search api 를 서버 레벨에서만 호출되도록 구성
 - search api filter 기본 설정 (ui 에서 sort 설정 옵션 지원 해야함)
 - update params hook 생성
@@ -73,21 +73,22 @@
 - search api filter
   - https://docs.github.com/ko/search-github/searching-on-github/searching-users (필터 타입)
   - https://docs.github.com/ko/rest/search/search?apiVersion=2022-11-28#constructing-a-search-query (검색 쿼리 생성 규칙)
-- prompt: 사용자 또는 조직만 검색 → type:user / type:org
-- prompt: 계정 이름, 성명 또는 메일로 검색 → in:login / in:name / in:email
-- prompt: uncontrolled form 변경
-- prompt: input 공백 입력 금지 패턴 추가
-- prompt: 레포지토리 수 필터 추가 -> repos:0..1000 형태로 지원
-- prompt: 국가 필터 추가 -> suggest ui 지원
-- prompt: 사용 언어 필터 추가 -> suggest ui 지원
-- prompt: 개인 계정 생성일 필터 추가 -> suggest ui 지원
-- prompt: 팔로워 수 필터 추가
-- prompt: 후원 가능 여부 필터 추가
+- 사용자 또는 조직만 검색 → type:user / type:org
+- 계정 이름, 성명 또는 메일로 검색 → in:login / in:name / in:email
+- uncontrolled form 변경
+- input 공백 입력 금지 패턴 추가
+- 레포지토리 수 필터 추가 -> repos:0..1000 형태로 지원
+- 국가 필터 추가 -> suggest ui 지원
+- 사용 언어 필터 추가 -> suggest ui 지원
+- 개인 계정 생성일 필터 추가 -> suggest ui 지원
+- 팔로워 수 필터 추가
+- 후원 가능 여부 필터 추가
 - github filter 와 유사하게 필터 정리
 - 불필요한 filter 코드 정리, 필터 코드 통합
-- prompt: canvas 를 이용하여 아바타 이미지 처리
+- canvas 를 이용하여 아바타 이미지 처리
 - 무한 스크롤 적용
   - 최초에 SSR 호출한 데이터 노출
   - 이후 클라이언트 검색 데이터 노출
   - 다른 유저 검색시 클라이언트 검색 데이터 노출
   - 모든 데이터 호출했을때 데이터 호출 방지
+- retry 로직 적용
