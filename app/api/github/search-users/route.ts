@@ -5,10 +5,11 @@ import type { NextRequest } from 'next/server';
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const q = searchParams.get('q') ?? '';
+  const page = searchParams.get('page') ?? '1';
 
   const repo = createGitHubSearchUserRepository();
   const searchUsers = createSearchUsersService(repo);
 
-  const result = await searchUsers({ q });
+  const result = await searchUsers({ q, page });
   return Response.json(result);
 }
