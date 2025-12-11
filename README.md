@@ -13,17 +13,17 @@
 
 # Dev Condition
 
-- [] 시스템 연동 다크 모드 지원
 - [x] 스크린: SM / MD / LG / XL 지원
+- [x] UI 컴포넌트는 MUI 사용, UI 컴포넌트 레이아웃은 Tailwind CSS 사용
+- [x] 페이징 처리: SSR 로 첫페이지 선 랜더링, 이후 CSR 로 무한 스크롤
+- [x] 사용자 아바타 이미지 처리: HTML5 Canvas + WebAssembly 를 통해 랜더링
+- [x] 모든 GitHub 호출은 서버 라우트에서 Authorization: token 사용
+- [] 시스템 연동 다크 모드 지원
 - [] 머터리얼 디자인 칼라 팔레트 지원
 - [] 폰트 폴백: 애플 기본 > Noto
-- [x] UI 컴포넌트는 MUI 사용, UI 컴포넌트 레이아웃은 Tailwind CSS 사용
 - [] 정렬 조건: 기본, followers, repositories, joined 지원 + DESC
-- [] 페이징 처리: SSR 로 첫페이지 선 랜더링, 이후 CSR 로 무한 스크롤
-- [] 사용자 아바타 이미지 처리: HTML5 Canvas + WebAssembly 를 통해 랜더링
 - [] Jest 를 통한 유닛 테스트 지원
 - [] Cypress 를 통한 E2E 테스트 지원
-- [x] 모든 GitHub 호출은 서버 라우트에서 Authorization: token 사용
 - [] 레이트리밋 초과 시 재시도, 남은 쿼터 노출
 
 # Test Condition
@@ -85,3 +85,9 @@
 - prompt: 후원 가능 여부 필터 추가
 - github filter 와 유사하게 필터 정리
 - 불필요한 filter 코드 정리, 필터 코드 통합
+- prompt: canvas 를 이용하여 아바타 이미지 처리
+- 무한 스크롤 적용
+  - 최초에 SSR 호출한 데이터 노출
+  - 이후 클라이언트 검색 데이터 노출
+  - 다른 유저 검색시 클라이언트 검색 데이터 노출
+  - 모든 데이터 호출했을때 데이터 호출 방지
