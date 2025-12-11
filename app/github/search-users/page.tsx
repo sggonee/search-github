@@ -1,4 +1,5 @@
 import Search from '@/features/github/searchUsers/components/Search';
+import User from '@/features/github/searchUsers/components/User';
 import { createGitHubSearchUserRepository } from '@/features/github/searchUsers/repository';
 import { createSearchUsersService } from '@/features/github/searchUsers/service';
 import { Suspense } from 'react';
@@ -27,9 +28,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ q
         "
       >
         {data.items.map((item) => (
-          <li key={item.id} className="border rounded px-3 py-2 flex gap-2 items-center">
-            {item.login}
-          </li>
+          <User key={item.id} item={item} />
         ))}
       </ul>
     </>
