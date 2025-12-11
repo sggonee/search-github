@@ -1,3 +1,4 @@
+import PaginationUsers from '@/features/github/searchUsers/components/PaginationUsers';
 import Search from '@/features/github/searchUsers/components/Search';
 import User from '@/features/github/searchUsers/components/User';
 import { createGitHubSearchUserRepository } from '@/features/github/searchUsers/repository';
@@ -6,10 +7,9 @@ import { Suspense } from 'react';
 
 export default async function Page({ searchParams }: { searchParams: Promise<{ q: string }> }) {
   const params = await searchParams;
-  console.log('params', params);
   const repo = createGitHubSearchUserRepository();
   const searchUsers = createSearchUsersService(repo);
-  const data = params.q ? await searchUsers(params) : { items: [] };
+  const data = params.q ? await searchUsers({ ...params, page: '1' }) : { items: [] };
 
   return (
     <>
@@ -30,6 +30,9 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ q
         {data.items.map((item) => (
           <User key={item.id} item={item} />
         ))}
+        <Suspense>
+          <PaginationUsers />
+        </Suspense>
       </ul>
     </>
   );
