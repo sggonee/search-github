@@ -18,13 +18,13 @@
 - [x] 페이징 처리: SSR 로 첫페이지 선 랜더링, 이후 CSR 로 무한 스크롤
 - [x] 사용자 아바타 이미지 처리: HTML5 Canvas + WebAssembly 를 통해 랜더링
 - [x] 모든 GitHub 호출은 서버 라우트에서 Authorization: token 사용
+- [x] 레이트리밋 초과 시 재시도, 남은 쿼터 노출
 - [] 시스템 연동 다크 모드 지원
 - [] 머터리얼 디자인 칼라 팔레트 지원
 - [] 폰트 폴백: 애플 기본 > Noto
 - [] 정렬 조건: 기본, followers, repositories, joined 지원 + DESC
 - [] Jest 를 통한 유닛 테스트 지원
 - [] Cypress 를 통한 E2E 테스트 지원
-- [] 레이트리밋 초과 시 재시도, 남은 쿼터 노출
 
 # Test Condition
 
@@ -92,3 +92,4 @@
   - 다른 유저 검색시 클라이언트 검색 데이터 노출
   - 모든 데이터 호출했을때 데이터 호출 방지
 - retry 로직 적용
+- retry, search github hook 분리
