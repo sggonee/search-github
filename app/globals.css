@@ -1,7 +1,7 @@
 @import 'tailwindcss';
 
 :root {
-  --font-base: -apple-system, BlinkMacSystemFont, 'Noto Sans KR', 'Noto Sans', system-ui, sans-serif;
+  --font-base: -apple-system, 'Noto Sans KR', 'Noto Sans', system-ui, sans-serif;
 }
 
 /* 브라우저에게 라이트/다크 둘 다 쓸 수 있다고 힌트 */

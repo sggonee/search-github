@@ -20,7 +20,7 @@ export default function AppThemeProvider({ children }: Props) {
           secondary: teal,
         },
         typography: {
-          fontFamily: "-apple-system, BlinkMacSystemFont, 'Noto Sans KR', 'Noto Sans', system-ui, sans-serif",
+          fontFamily: "-apple-system, 'Noto Sans KR', 'Noto Sans', system-ui, sans-serif",
         },
       }),
     [prefersDarkMode],
