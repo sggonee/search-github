@@ -5,11 +5,7 @@ import { getCountries } from '@/shared/policy/country';
 import AddIcon from '@mui/icons-material/Add';
 import SearchIcon from '@mui/icons-material/Search';
 import {
-  Autocomplete,
   Box,
-  Checkbox,
-  FormControl,
-  FormControlLabel,
   IconButton,
   InputAdornment,
   List,
@@ -17,12 +13,11 @@ import {
   ListItemIcon,
   ListItemText,
   Paper,
-  Slider,
   TextField,
   Typography,
 } from '@mui/material';
 import { useSearchParams } from 'next/navigation';
-import { FormEvent, useMemo, useState } from 'react';
+import { FormEvent, useMemo } from 'react';
 const advancedFilters = [
   { key: 'organization', label: 'Organization', targetId: 'filter-organization' },
   { key: 'user', label: 'User', targetId: 'filter-user' },
@@ -36,6 +31,24 @@ const advancedFilters = [
   { key: 'created', label: 'Creation date', targetId: 'filter-created' },
   { key: 'sponsorable', label: 'Sponsorable', targetId: 'filter-sponsorable' },
 ];
+
+const SearchFilter: Record<string, { token: string; range: string[] }> = {
+  organization: { token: 'type:org', range: ['type:user', 'type:org'] },
+  user: { token: 'type:user', range: ['type:user', 'type:org'] },
+
+  'in-login': { token: 'in:login', range: ['in:login', 'in:name', 'in:email'] },
+  'in-name': { token: 'in:name', range: ['in:login', 'in:name', 'in:email'] },
+  'in-email': { token: 'in:email', range: ['in:login', 'in:name', 'in:email'] },
+
+  location: { token: 'location:', range: ['location:'] },
+  language: { token: 'language:', range: ['language:'] },
+  created: { token: 'created:', range: ['created:'] },
+
+  repos: { token: 'repos:', range: ['repos:'] },
+  followers: { token: 'followers:', range: ['followers:'] },
+
+  sponsorable: { token: 'is:sponsorable', range: ['is:sponsorable'] },
+};
 
 // Country option type
 interface CountryOption {
@@ -221,40 +234,22 @@ const Search = () => {
   const q = searchParams.get('q') ?? '';
   const persistParams = useMemo(() => parseFormFromQuery(q), [q]);
 
-  const [reposRange, setReposRange] = useState<[number, number]>([persistParams.repos.min, persistParams.repos.max]);
-  const [reposEnabled, setReposEnabled] = useState(persistParams.repos.min !== 0 || persistParams.repos.max !== 10000);
-
-  const [followersRange, setFollowersRange] = useState<[number, number]>([
-    persistParams.followers.min,
-    persistParams.followers.max,
-  ]);
-  const [followersEnabled, setFollowersEnabled] = useState(
-    persistParams.followers.min !== 0 || persistParams.followers.max !== 10000,
-  );
-
-  const applyTypeFilter = (snippet: 'type:user' | 'type:org') => {
+  /**
+   * 공통 토큰 필터 함수
+   * - 현재 q 인풋을 읽어서 공백 기준으로 토큰화
+   * - groupTokens 에 포함된 토큰을 모두 제거
+   * - snippet 이 이미 없으면 마지막에 추가
+   */
+  const applySingleTokenFilter = (snippet: string, groupTokens: string[]) => {
     const input = document.querySelector('input[name="q"]') as HTMLInputElement | null;
     if (!input) return;
 
     const tokens = input.value.trim().split(/\s+/).filter(Boolean);
-    const filtered = tokens.filter((t) => t !== 'type:user' && t !== 'type:org');
+    const filtered = tokens.filter((t) => !groupTokens.includes(t));
 
-    // 새 스니펫 추가 (항상 하나만 유지)
-    filtered.push(snippet);
-
-    input.value = filtered.join(' ');
-    input.focus();
-  };
-
-  const applyInFilter = (snippet: 'in:login' | 'in:name' | 'in:email') => {
-    const input = document.querySelector('input[name="q"]') as HTMLInputElement | null;
-    if (!input) return;
-
-    const tokens = input.value.trim().split(/\s+/).filter(Boolean);
-    const filtered = tokens.filter((t) => t !== 'in:login' && t !== 'in:name' && t !== 'in:email');
-
-    // 새 스니펫 추가 (항상 하나만 유지)
-    filtered.push(snippet);
+    if (!filtered.includes(snippet)) {
+      filtered.push(snippet);
+    }
 
     input.value = filtered.join(' ');
     input.focus();
@@ -323,21 +318,12 @@ const Search = () => {
                 key={item.key}
                 className="px-1"
                 onClick={() => {
-                  if (item.key === 'organization') {
-                    applyTypeFilter('type:org');
+                  const config = SearchFilter[item.key];
+                  if (config) {
+                    applySingleTokenFilter(config.token, config.range);
                   }
-                  if (item.key === 'user') {
-                    applyTypeFilter('type:user');
-                  }
-                  if (item.key) {
-                    applyInFilter('in:login');
-                  }
-                  if (item.key === 'in-name') {
-                    applyInFilter('in:name');
-                  }
-                  if (item.key === 'in-email') {
-                    applyInFilter('in:email');
-                  }
+
+                  // 스크롤/포커스 등 추가 UX는 이후 단계에서 따로 다룸
                 }}
               >
                 <ListItemIcon className="min-w-0 mr-2">
@@ -348,200 +334,6 @@ const Search = () => {
             ))}
           </List>
         </Box>
-
-        {/* 위치별 검색 (location:) + 사용 언어로 검색 (language:) - 2컬럼 레이아웃 */}
-        <Box className="w-full flex flex-col md:flex-row gap-4 mb-1">
-          {/* 위치별 검색 (location:) */}
-          <FormControl component="fieldset" className="w-full md:flex-1" id="filter-location">
-            <Typography variant="subtitle2" className="mb-1">
-              위치별 검색
-            </Typography>
-            <Autocomplete<CountryOption, false, false, true>
-              freeSolo
-              options={Object.entries(countries).map(([code, name]) => ({ code, name }))}
-              getOptionLabel={(option) => (typeof option === 'string' ? option : option.name)}
-              defaultValue={persistParams.location || ''}
-              onChange={(_, value) => {
-                const form = document.querySelector('form');
-                const input = form!.querySelector('input[name="location"]') as HTMLInputElement | null;
-                if (value && typeof value !== 'string') {
-                  input!.value = value.name;
-                } else {
-                  input!.value = value || '';
-                }
-              }}
-              renderOption={(props, option: CountryOption) => (
-                <li {...props} key={option.code}>
-                  {option.name} ({option.code.toUpperCase()})
-                </li>
-              )}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  variant="standard"
-                  placeholder="국가를 입력하세요"
-                  name="locationDisplay"
-                  autoComplete="off"
-                />
-              )}
-            />
-            <input type="hidden" name="location" defaultValue={persistParams.location} />
-          </FormControl>
-
-          {/* 사용 언어로 검색 (language:) */}
-          <FormControl component="fieldset" className="w-full md:flex-1" id="filter-language">
-            <Typography variant="subtitle2" className="mb-1">
-              사용 언어로 검색
-            </Typography>
-            <Autocomplete<string, false, false, true>
-              freeSolo
-              options={languages}
-              defaultValue={persistParams.language || ''}
-              onChange={(_, value) => {
-                const form = document.querySelector('form');
-                const input = form!.querySelector('input[name="language"]') as HTMLInputElement | null;
-                input!.value = value ?? '';
-              }}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  variant="standard"
-                  placeholder="예: TypeScript, JavaScript, Python"
-                  name="languageDisplay"
-                  autoComplete="off"
-                />
-              )}
-            />
-            <input type="hidden" name="language" defaultValue={persistParams.language} />
-          </FormControl>
-        </Box>
-
-        {/* 개인 계정을 만든 시점별 검색 (created:) */}
-        <FormControl component="fieldset" className="w-full mb-1" id="filter-created">
-          <Typography variant="subtitle2" className="mb-1">
-            개인 계정 생성일
-          </Typography>
-          <Autocomplete<string, false, false, true>
-            freeSolo
-            options={createdSuggestions}
-            defaultValue={persistParams.created || ''}
-            onChange={(_, value) => {
-              const form = document.querySelector('form');
-              const input = form!.querySelector('input[name="created"]') as HTMLInputElement | null;
-              if (!input) return;
-              input.value = value ?? '';
-            }}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                variant="standard"
-                placeholder="예: 2025-12-10, >2025-12-07"
-                name="createdDisplay"
-                autoComplete="off"
-              />
-            )}
-          />
-          <input type="hidden" name="created" defaultValue={persistParams.created} />
-        </FormControl>
-
-        <FormControl component="fieldset" className="w-full" id="filter-repos">
-          <Box className="flex items-center justify-between mb-1">
-            <Typography variant="subtitle2">리포지토리 수</Typography>
-          </Box>
-          <Box className="gap-2">
-            <FormControlLabel
-              control={
-                <Checkbox
-                  name="reposEnabled"
-                  checked={reposEnabled}
-                  onChange={(_, checked) => {
-                    setReposEnabled(checked);
-                    const form = document.querySelector('form');
-                    const input = form!.querySelector('input[name="repos"]') as HTMLInputElement | null;
-                    input!.value = checked ? `${reposRange[0]}..${reposRange[1]}` : '0..10000';
-                  }}
-                  size="small"
-                />
-              }
-              label="활성화"
-              className="whitespace-nowrap"
-            />
-            <Box>
-              <Slider
-                value={reposRange}
-                min={0}
-                max={10000}
-                valueLabelDisplay="auto"
-                onChange={(_, value) => {
-                  const [min, max] = value as number[];
-                  setReposRange([min, max]);
-                  const form = document.querySelector('form');
-                  const input = form!.querySelector('input[name="repos"]') as HTMLInputElement | null;
-                  input!.value = `${min}..${max}`;
-                }}
-                disabled={!reposEnabled}
-              />
-            </Box>
-
-            <input type="hidden" name="repos" defaultValue={`${reposRange[0]}..${reposRange[1]}`} />
-          </Box>
-        </FormControl>
-
-        <FormControl component="fieldset" className="w-full mt-3" id="filter-followers">
-          <Box className="flex items-center justify-between mb-1">
-            <Typography variant="subtitle2">팔로워 수</Typography>
-          </Box>
-          <Box className="gap-2">
-            <FormControlLabel
-              control={
-                <Checkbox
-                  name="followersEnabled"
-                  checked={followersEnabled}
-                  onChange={(_, checked) => {
-                    setFollowersEnabled(checked);
-                    const form = document.querySelector('form');
-                    const input = form!.querySelector('input[name="followers"]') as HTMLInputElement | null;
-                    if (input) {
-                      input.value = checked ? `${followersRange[0]}..${followersRange[1]}` : '0..10000';
-                    }
-                  }}
-                  size="small"
-                />
-              }
-              label="활성화"
-              className="whitespace-nowrap"
-            />
-            <Box>
-              <Slider
-                value={followersRange}
-                min={0}
-                max={10000}
-                valueLabelDisplay="auto"
-                onChange={(_, value) => {
-                  const [min, max] = value as number[];
-                  setFollowersRange([min, max]);
-                  const form = document.querySelector('form');
-                  const input = form!.querySelector('input[name="followers"]') as HTMLInputElement | null;
-                  if (input) {
-                    input.value = `${min}..${max}`;
-                  }
-                }}
-                disabled={!followersEnabled}
-              />
-            </Box>
-            <input type="hidden" name="followers" defaultValue={`${followersRange[0]}..${followersRange[1]}`} />
-          </Box>
-        </FormControl>
-
-        <FormControl component="fieldset" className="w-full mt-3" id="filter-sponsorable">
-          <Typography variant="subtitle2" className="mb-1">
-            후원 가능 여부
-          </Typography>
-          <FormControlLabel
-            control={<Checkbox name="sponsorable" defaultChecked={persistParams.sponsorable} size="small" />}
-            label="후원 가능한 계정만 (is:sponsorable)"
-          />
-        </FormControl>
       </Paper>
     </Box>
   );
