@@ -1,16 +1,20 @@
 import Search from '@/features/github/searchUsers/components/Search';
 import { createGitHubSearchUserRepository } from '@/features/github/searchUsers/repository';
 import { createSearchUsersService } from '@/features/github/searchUsers/service';
+import { Suspense } from 'react';
 
 export default async function Page({ searchParams }: { searchParams: Promise<{ q: string }> }) {
   const params = await searchParams;
+  console.log('params', params);
   const repo = createGitHubSearchUserRepository();
   const searchUsers = createSearchUsersService(repo);
   const data = params.q ? await searchUsers(params) : { items: [] };
 
   return (
     <>
-      <Search />
+      <Suspense>
+        <Search />
+      </Suspense>
       <ul
         className="
           w-full
