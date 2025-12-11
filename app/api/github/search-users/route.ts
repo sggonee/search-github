@@ -10,6 +10,11 @@ export async function GET(request: NextRequest) {
   const repo = createGitHubSearchUserRepository();
   const searchUsers = createSearchUsersService(repo);
 
-  const result = await searchUsers({ q, page });
-  return Response.json(result);
+  try {
+    const result = await searchUsers({ q, page });
+    return Response.json(result);
+  } catch (error: any) {
+    const message = error?.message || 'Internal Server Error';
+    return new Response(message, error);
+  }
 }

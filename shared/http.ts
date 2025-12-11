@@ -12,22 +12,16 @@ const mergeOptions = (defaultOptions: Record<string, unknown>, mergedOptions: Re
 const _fetch = async (path: string, options?: Record<string, unknown>) => {
   const query = options?.params ? `?` + new URLSearchParams(options.params as URLSearchParams) : '';
   const baseUrl = `${path}${query}`;
-  return fetch(baseUrl, { ...options }).then((response: Response) => {
-    return response.text().then((text) => {
-      if (!text) return;
-      try {
-        const data = JSON.parse(text);
-        if (!response.ok) return Promise.reject(data);
-        return data;
-      } catch (err) {
-        return Promise.reject({
-          code: 500,
-          message: 'INTERNAL SERVER ERROR',
-          cause: 'UNKNOWN ERROR',
-        });
-      }
-    });
-  });
+
+  try {
+    const response = await fetch(baseUrl, { ...options });
+    if (!response.ok) {
+      return Promise.reject({ status: response.status, message: response.statusText });
+    }
+    return await response.json();
+  } catch (error) {
+    return Promise.reject(error);
+  }
 };
 
 const _get = (baseUrl: string, options?: Record<string, unknown>) => {

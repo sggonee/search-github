@@ -9,7 +9,9 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ q
   const params = await searchParams;
   const repo = createGitHubSearchUserRepository();
   const searchUsers = createSearchUsersService(repo);
-  const data = params.q ? await searchUsers({ ...params, page: '1' }) : { items: [] };
+  const data = params.q
+    ? await searchUsers({ ...params, page: params.page || '1' })
+    : { items: [], total_count: 0, incomplete_results: false };
 
   return (
     <>
