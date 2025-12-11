@@ -28,7 +28,8 @@ const UserView = ({
     totalCount: 0,
   });
   const isEnded = users.length >= pager.totalCount && pager.totalCount > 0;
-  const isRetrying = retryCount > 0 && retryCount < 5;
+  const isRetryLimitExceeded = retryCount >= 5;
+  const isRetrying = retryCount > 0 && !isRetryLimitExceeded;
   const loaderRef = useRef<HTMLDivElement | null>(null);
 
   const updatePager = (state: Partial<typeof pager>) => {
@@ -36,28 +37,30 @@ const UserView = ({
     state.page && updateParams({ page: `${state.page}` });
   };
 
-  const retryGithubSearchUsers = async (fn: () => Promise<void>) => {
-    if (retryCount >= 5) return; // stop after 5 retries
-    setRetryCount((c) => c + 1);
-    setTimeout(fn, 1000); // wait 1s then retry
+  const retryGithubSearchUsers = (fn: () => Promise<void>) => {
+    if (isRetryLimitExceeded) return;
+
+    setRetryCount((prev) => {
+      const next = prev + 1;
+      if (next > 5) return prev;
+      setTimeout(() => {
+        fn();
+      }, 1000);
+
+      return next;
+    });
   };
 
-  // 공통 페이지 로더: page 번호와 reset 여부를 받아,
-  // - reset 시에는 기존 목록을 갈아끼우고
-  // - 아니면 append 방식으로 이어 붙입니다.
   const fetchGithubUsers = async (opt = { page: 1, reset: false }) => {
-    if (!q || pager.loading) return;
+    if (!q || pager.loading || isRetryLimitExceeded) return;
 
     try {
       updatePager({ loading: true });
-
       const data = await http.get('/api/github/search-users', { params: { q, page: opt.page } });
-
       setUsers((prev) => {
         if (opt.reset) return data.items;
         return [...prev, ...data.items];
       });
-
       updatePager({
         mode: 'csr',
         page: opt.page,
@@ -65,14 +68,17 @@ const UserView = ({
         totalCount: data.total_count ?? pager.totalCount,
       });
       setRetryCount(0);
-    } catch {
+    } catch (error: any) {
+      const isReset = error.status === 422;
       retryGithubSearchUsers(() => fetchGithubUsers(opt));
-      updatePager({ loading: false });
+      updatePager({ loading: false, page: isReset ? 1 : pager.page });
+      isReset && setUsers([]);
     }
   };
 
   useEffect(() => {
     if (initParams.q === q) return;
+    setRetryCount(0);
     fetchGithubUsers({ page: 1, reset: true });
   }, [q]);
 
