@@ -11,6 +11,7 @@ export const getGithubUsers = async (params: Record<string, string>) => {
     },
     params: {
       ...params,
+      per_page: '30',
       order: 'desc',
     },
   });

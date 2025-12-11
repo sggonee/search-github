@@ -9,6 +9,6 @@ export async function GET(request: NextRequest) {
   const repo = createGitHubSearchUserRepository();
   const searchUsers = createSearchUsersService(repo);
 
-  const result = await searchUsers(q);
+  const result = await searchUsers({ q });
   return Response.json(result);
 }

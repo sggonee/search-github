@@ -93,7 +93,7 @@ const Search = () => {
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
-    updateParams({ q: (formData.get('q') as string) ?? '' });
+    updateParams({ q: (formData.get('q') as string) ?? '', page: '1' });
   };
 
   return (
