@@ -1,7 +1,6 @@
 'use client';
 
 import CircularProgress from '@mui/material/CircularProgress';
-import { useSearchParams } from 'next/navigation';
 import { PropsWithChildren } from 'react';
 import { GithubUser } from '../../user/interface';
 import useGithubSearchUsers from '../hooks/useGithubSearchUsers';
@@ -10,18 +9,11 @@ import User from './User';
 
 const UserView = ({
   children,
-  initParams,
   initData,
 }: PropsWithChildren<{
-  initParams: { q: string; page: string };
   initData: GithubSearchUsers | { items: GithubUser[] };
 }>) => {
-  const searchParams = useSearchParams();
-  const { users, retryCount, isServer, isLoading, isRetrying } = useGithubSearchUsers({
-    q: searchParams.get('q') ?? '',
-    initParams,
-    initData,
-  });
+  const { users, retryCount, isServer, isLoading, isRetrying } = useGithubSearchUsers({ initData });
 
   return (
     <ul className="w-full sm:max-w-md md:max-w-lg lg:max-w-2xl xl:max-w-3xl mx-auto space-y-2">

@@ -1,5 +1,6 @@
 import useRetry from '@/shared/hooks/useTry';
 import http from '@/shared/http';
+import { useSearchParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { GithubUser } from '../../user/interface';
 import { GithubSearchUsers } from '../interface';
@@ -18,15 +19,8 @@ const throttle = <T extends (...args: any[]) => void>(fn: T, delay: number) => {
   };
 };
 
-const useGithubSearchUsers = ({
-  q,
-  initParams,
-  initData,
-}: {
-  q: string;
-  initParams: { q: string; page: string };
-  initData: GithubSearchUsers | { items: GithubUser[] };
-}) => {
+const useGithubSearchUsers = ({ initData }: { initData: GithubSearchUsers | { items: GithubUser[] } }) => {
+  const searchParams = useSearchParams();
   const [mode, setMode] = useState('ssr');
   const [isLoading, setLoading] = useState(false);
   const [users, setUsers] = useState<GithubUser[]>(initData.items);
@@ -40,7 +34,7 @@ const useGithubSearchUsers = ({
   } = useRetry(MAX_RETRY_ATTEMPTS, RETRY_DELAY_MS);
 
   const pagerRef = useRef({
-    q,
+    q: searchParams.toString(),
     page: 1,
     totalCount: 0,
     isFetching: false,
@@ -51,13 +45,19 @@ const useGithubSearchUsers = ({
     pagerRef.current = { ...pagerRef.current, ...state };
   };
 
+  const encodeSearchParams = (q: string) => {
+    return new URLSearchParams(q).entries().reduce((acc, [key, value]) => ({ ...acc, [key]: value }), {});
+  };
+
   const fetchGithubUsers = async (q: string, opt = { page: 1, reset: false }) => {
     if (!q || isRetryLimitExceeded) return;
 
     try {
       setLoading(true);
       updatePager({ isFetching: true });
-      const data = await http.get('/api/github/search-users', { params: { q, page: opt.page } });
+      const data = await http.get('/api/github/search-users', {
+        params: { ...encodeSearchParams(q), page: opt.page },
+      });
       const { totalCount } = pagerRef.current;
 
       setMode('csr');
@@ -83,10 +83,10 @@ const useGithubSearchUsers = ({
   // 검색어 변경 시 첫 페이지를 다시 가져옴
   // 단, 최초 렌더에서는 서버에서 받은 SSR 데이터를 그대로 사용하고 fetch 하지 않음
   useEffect(() => {
-    if (initParams.q === q) return;
+    const q = searchParams.toString();
     resetRetry();
     fetchGithubUsers(q, { page: 1, reset: true });
-  }, [q]);
+  }, [searchParams]);
 
   // 무한 스크롤: 스크롤 이벤트 + throttle + bottom 도달 감지
   useEffect(() => {

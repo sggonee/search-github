@@ -17,6 +17,7 @@ import {
 } from '@mui/material';
 import { useSearchParams } from 'next/navigation';
 import { FormEvent, useState } from 'react';
+import SortControl from './SortControl';
 
 const advancedFilters = [
   { key: 'organization', label: 'Organization', targetId: 'filter-organization' },
@@ -117,11 +118,18 @@ const Header = () => {
                 pattern: '.*\\S.*',
                 title: '공백만 입력할 수 없습니다.',
               },
+              startAdornment: (
+                <Box className="flex items-center gap-2 mr-2">
+                  <SortControl />
+                </Box>
+              ),
               endAdornment: (
                 <InputAdornment position="end">
-                  <IconButton type="submit" size="small" aria-label="검색">
-                    <SearchIcon />
-                  </IconButton>
+                  <Box className="flex items-center gap-1">
+                    <IconButton type="submit" size="small" aria-label="검색">
+                      <SearchIcon />
+                    </IconButton>
+                  </Box>
                 </InputAdornment>
               ),
               disableUnderline: true,
