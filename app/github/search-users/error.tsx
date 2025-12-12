@@ -1,20 +1,9 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
-
-interface Props {
-  error: Error & { digest?: string };
-  reset: () => void;
-}
-
-export default function SearchUsersError({ error, reset }: Props) {
-  const router = useRouter();
+export default function SearchUsersError({ error }: { error: Error & { digest?: string } }) {
   const onRefresh = () => {
-    // 전체 페이지 새로고침
     window.location.replace('/');
   };
-
-  console.log(error);
 
   return (
     <div className="fixed inset-0 flex items-center justify-center px-4 bg-black/10">

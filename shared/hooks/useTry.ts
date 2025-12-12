@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 
-const useRetry = (limit: number, delay: number) => {
+export default function useRetry(limit: number, delay: number) {
   const [count, setCount] = useState(0);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -49,6 +49,4 @@ const useRetry = (limit: number, delay: number) => {
     schedule,
     reset,
   };
-};
-
-export default useRetry;
+}

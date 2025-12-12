@@ -2,7 +2,7 @@ import { useSearchParams } from 'next/navigation';
 
 // 참고: https://nextjs.org/docs/app/getting-started/linking-and-navigating
 
-const useSearch = () => {
+export default function useSearch() {
   const searchParams = useSearchParams();
 
   const updateParams = (params: Record<string, string>) => {
@@ -14,6 +14,4 @@ const useSearch = () => {
   };
 
   return { updateParams };
-};
-
-export default useSearch;
+}

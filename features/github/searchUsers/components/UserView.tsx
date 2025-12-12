@@ -7,12 +7,12 @@ import useGithubSearchUsers from '../hooks/useGithubSearchUsers';
 import { GithubSearchUsers } from '../interface';
 import User from './User';
 
-const UserView = ({
+export default function UserView({
   children,
   initData,
 }: PropsWithChildren<{
   initData: GithubSearchUsers | { items: GithubUser[] };
-}>) => {
+}>) {
   const { users, retryCount, isServer, isLoading, isRetrying } = useGithubSearchUsers({ initData });
 
   return (
@@ -30,6 +30,4 @@ const UserView = ({
       )}
     </ul>
   );
-};
-
-export default UserView;
+}

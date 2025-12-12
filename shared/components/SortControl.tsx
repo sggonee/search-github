@@ -4,7 +4,7 @@ import useSearch from '@/shared/hooks/useSearch';
 import { FormControl, MenuItem, Select, SelectChangeEvent } from '@mui/material';
 import { useSearchParams } from 'next/navigation';
 
-const SortControl = () => {
+export default function SortControl() {
   const { updateParams } = useSearch();
   const searchParams = useSearchParams();
   const sort = searchParams.get('sort') ?? '';
@@ -24,6 +24,4 @@ const SortControl = () => {
       </Select>
     </FormControl>
   );
-};
-
-export default SortControl;
+}

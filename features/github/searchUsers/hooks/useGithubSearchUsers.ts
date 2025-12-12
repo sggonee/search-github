@@ -23,7 +23,7 @@ const encodeSearchParams = (q: string) => {
   return new URLSearchParams(q).entries().reduce((acc, [key, value]) => ({ ...acc, [key]: value }), {});
 };
 
-const useGithubSearchUsers = ({ initData }: { initData: GithubSearchUsers | { items: GithubUser[] } }) => {
+export default function useGithubSearchUsers({ initData }: { initData: GithubSearchUsers | { items: GithubUser[] } }) {
   const didMountRef = useRef(false);
   const searchParams = useSearchParams();
   const [mode, setMode] = useState('ssr');
@@ -120,6 +120,4 @@ const useGithubSearchUsers = ({ initData }: { initData: GithubSearchUsers | { it
     isRetrying,
     isLoading,
   };
-};
-
-export default useGithubSearchUsers;
+}
