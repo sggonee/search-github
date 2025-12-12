@@ -22,7 +22,7 @@
 - [x] 머터리얼 디자인 칼라 팔레트 지원
 - [x] 시스템 연동 다크 모드 지원
 - [x] 폰트 폴백: 애플 기본 > Noto
-- [] 정렬 조건: 기본, followers, repositories, joined 지원 + DESC
+- [x] 정렬 조건: 기본, followers, repositories, joined 지원 + DESC
 - [] Jest 를 통한 유닛 테스트 지원
 - [] Cypress 를 통한 E2E 테스트 지원
 
@@ -105,3 +105,4 @@
   - MUI 는 컴포넌트 담당으로 분리
   - Tailwind 는 layout 담당 전용으로 Box 로 처리
 - willReadFrequently 처리 -> 브라우저가 적합한 메모리를 사용할 수 있도록 canvas 에 willReadFrequently 옵션 추가
+- sort(follower, join, repository) + decs 필터로직 추가
