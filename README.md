@@ -6,7 +6,7 @@
 
 # 실행 방법
 
-- `pnpm start` 를 입력하면 설치및 실행을 합니다.
+- `pnpm start` 를 입력하면 설치 -> 빌드 -> 실행 순서로 진행됩니다. ([http://localhost:3000](http://localhost:3000))
   - .env > `GITHUB_TOKEN=github_pat_xxxx` 토큰을 설정해주세요
   - `Fine-grained personal access tokens` 를 사용했습니다.
 - `pnpm test:e2e` 를 입력하면 e2e 테스트를 시작합니다.
