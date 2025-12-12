@@ -1,4 +1,5 @@
 import http from '@/shared/http';
+import { env } from '@/shared/policy/env';
 import type { GitHubSearchUsersRepository, GithubSearchUsers } from './interface';
 
 export function createGitHubSearchUserRepository(): GitHubSearchUsersRepository {
@@ -8,7 +9,7 @@ export function createGitHubSearchUserRepository(): GitHubSearchUsersRepository 
         headers: {
           Accept: 'application/vnd.github+json',
           'X-GitHub-Api-Version': '2022-11-28',
-          Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
+          Authorization: `Bearer ${env.token}`,
         },
         params: {
           ...params,

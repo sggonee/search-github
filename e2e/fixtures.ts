@@ -1,9 +1,6 @@
 import { test as base, expect, type Page } from '@playwright/test';
 import { mockUsers } from './data/users';
 
-const PORT = Number(process.env.PORT ?? 3000);
-const BASE_URL = process.env.PLAYWRIGHT_BASE_URL ?? `http://127.0.0.1:${PORT}`;
-
 type Fixtures = {
   page: Page;
   gotoHome: () => Promise<void>;
@@ -241,7 +238,7 @@ function installMockRoute(page: Page) {
 
 async function gotoWithMock(page: Page, path: string) {
   await installMockRoute(page);
-  await page.goto(`${BASE_URL}${path}`);
+  await page.goto(`http://127.0.0.1:3000${path}`);
 }
 
 export const test = base.extend<Fixtures>({
