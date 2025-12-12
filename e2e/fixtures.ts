@@ -115,6 +115,40 @@ function filterByCreatedRange(ctx: TokenCtx) {
   };
 }
 
+function filterByLocationLanguage(ctx: TokenCtx) {
+  const locToken = ctx.tokens.find((t) => t.startsWith('location:'));
+  const langToken = ctx.tokens.find((t) => t.startsWith('language:'));
+
+  const loc = locToken ? locToken.slice('location:'.length).trim() : '';
+  const lang = langToken ? langToken.slice('language:'.length).trim() : '';
+
+  const includesCI = (needle: string, hay?: unknown) => {
+    if (!needle) return true;
+    if (typeof hay !== 'string' || !hay) return false;
+    return hay.toLowerCase().includes(needle.toLowerCase());
+  };
+
+  return (u: MockUser) => {
+    // NOTE: mockUsers에 location/language가 없는 경우가 있을 수 있어,
+    //       값이 없으면 필터가 강제로 0건이 되지 않도록 '없으면 통과'로 둔다.
+    //       (실서비스가 아니라 E2E mock 목적)
+    if (locToken) {
+      if (typeof u.location === 'string') {
+        if (!includesCI(loc, u.location)) return false;
+      }
+    }
+
+    if (langToken) {
+      const field = (u.language ?? u.lang) as unknown;
+      if (typeof field === 'string') {
+        if (!includesCI(lang, field)) return false;
+      }
+    }
+
+    return true;
+  };
+}
+
 function composeFilters(...filters: Array<(u: MockUser) => boolean>) {
   return (u: MockUser) => filters.every((fn) => fn(u));
 }
@@ -135,7 +169,7 @@ function installMockRoute(page: Page) {
       filterByReposRange(ctx),
       filterByFollowersRange(ctx),
       filterByCreatedRange(ctx),
-      // filterByLocationLanguage(ctx),
+      filterByLocationLanguage(ctx),
       // filterBySponsors(ctx),
     );
 
