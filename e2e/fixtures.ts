@@ -2,7 +2,7 @@ import { test as base, expect, type Page } from '@playwright/test';
 import { mockUsers } from './data/users';
 
 const PORT = Number(process.env.PORT ?? 3000);
-const BASE_URL = process.env.PLAYWRIGHT_BASE_URL ?? `http:localhost:${PORT}`;
+const BASE_URL = `http://localhost:${PORT}`;
 
 type Fixtures = {
   page: Page;
@@ -24,31 +24,59 @@ function installMockRoute(page: Page) {
     const isUserOnly = hasToken('type:user');
     const isOrgOnly = hasToken('type:org');
 
-    const items = mockUsers.filter((u) => {
-      if (isUserOnly) return u.type === 'User';
-      if (isOrgOnly) return u.type === 'Organization';
-      return true;
+    // `in:` filters (default: login)
+    const inLogin = hasToken('in:login');
+    const inName = hasToken('in:name');
+    const inEmail = hasToken('in:email');
+
+    // Treat the first non-qualifier token as keyword
+    // (qualifier examples: type:org, in:login, location:..., language:...)
+    const keyword = tokens.find((t) => !t.includes(':')) ?? '';
+
+    const matchText = (value: unknown) => {
+      if (!keyword) return true;
+      if (typeof value !== 'string') return false;
+      return value.toLowerCase().includes(keyword.toLowerCase());
+    };
+
+    const matchByInFilter = (u: any) => {
+      // if no `in:` specified, default behavior: login
+      if (!inLogin && !inName && !inEmail) return matchText(u.login);
+
+      const hits: boolean[] = [];
+      if (inLogin) hits.push(matchText(u.login));
+      if (inName) hits.push(matchText(u.name));
+      if (inEmail) hits.push(matchText(u.email));
+      return hits.some(Boolean);
+    };
+
+    const items = mockUsers.filter((u: any) => {
+      if (isUserOnly && u.type !== 'User') return false;
+      if (isOrgOnly && u.type !== 'Organization') return false;
+      return matchByInFilter(u);
     });
 
     await route.fulfill({
       status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({
+      json: {
         total_count: items.length,
         incomplete_results: false,
         items,
-      }),
+      },
     });
   });
+}
+
+async function gotoWithMock(page: Page, path: string) {
+  await installMockRoute(page);
+  await page.goto(`${BASE_URL}${path}`);
 }
 
 export const test = base.extend<Fixtures>({
   gotoHome: async ({ page }, use) => {
     await use(async () => {
-      await installMockRoute(page);
-
       // ✅ 최종 결과물 HTML이 /github/search-users 페이지에서 렌더링되는 상태라면
-      await page.goto(`${BASE_URL}/github/search-users?q=kevin`);
+      await gotoWithMock(page, '/github/search-users?q=kevin');
 
       await expect(page.getByRole('heading', { name: /GitHub 사용자 검색/ })).toBeVisible();
       await expect(page.locator('input[name="q"]')).toBeVisible();
@@ -57,14 +85,14 @@ export const test = base.extend<Fixtures>({
 
   gotoSearchResults: async ({ page }, use) => {
     await use(async (q: string) => {
-      await installMockRoute(page);
-      await page.goto(`${BASE_URL}/github/search-users?q=${encodeURIComponent(q)}`);
+      await gotoWithMock(page, `/github/search-users?q=${encodeURIComponent(q)}`);
       await expect(page).toHaveURL(/\/github\/search-users\?q=/);
     });
   },
 
   fillSearch: async ({ page }, use) => {
     await use(async (q: string) => {
+      await installMockRoute(page);
       const input = page.locator('input[name="q"]');
       await input.fill(q);
 
