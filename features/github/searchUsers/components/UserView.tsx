@@ -16,23 +16,32 @@ const UserView = ({
   initData: GithubSearchUsers | { items: GithubUser[] };
 }>) => {
   const searchParams = useSearchParams();
-  const { users, pager, loaderRef, retryCount, isRetrying } = useGithubSearchUsers({
+  const { users, retryCount, isServer, isFetching, isRetrying } = useGithubSearchUsers({
     q: searchParams.get('q') ?? '',
     initParams,
     initData,
   });
 
   return (
-    <>
-      {pager.mode === 'csr' ? users.map((item) => <User key={item.id} item={item} />) : children}
-      <div ref={loaderRef} className="h-4" />
-      {pager.loading && <div className="text-center py-4 text-sm text-gray-400">Loading...</div>}
+    <ul
+      className="
+        w-full
+        sm:max-w-md
+        md:max-w-lg
+        lg:max-w-2xl
+        xl:max-w-3xl
+        mx-auto
+        space-y-2
+      "
+    >
+      {isServer ? <>{children}</> : users.map((item) => <User key={item.id} item={item} />)}
+      {isFetching && <div className="text-center py-4 text-sm text-gray-400">Loading...</div>}
       {isRetrying && (
         <div className="text-center py-2 text-xs text-orange-500">
-          레이트리밋 초과로 재시도 중... ({retryCount} / {5})
+          요청 재시도 중... ({retryCount} / {5})
         </div>
       )}
-    </>
+    </ul>
   );
 };
 

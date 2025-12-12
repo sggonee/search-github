@@ -8,6 +8,17 @@ import { GithubSearchUsers } from '../interface';
 const MAX_RETRY_ATTEMPTS = 5;
 const RETRY_DELAY_MS = 1000;
 
+const throttle = <T extends (...args: any[]) => void>(fn: T, delay: number) => {
+  let lastCall = 0;
+
+  return (...args: Parameters<T>) => {
+    const now = Date.now();
+    if (now - lastCall < delay) return;
+    lastCall = now;
+    fn(...args);
+  };
+};
+
 const useGithubSearchUsers = ({
   q,
   initParams,
@@ -18,6 +29,8 @@ const useGithubSearchUsers = ({
   initData: GithubSearchUsers | { items: GithubUser[] };
 }) => {
   const { updateParams } = useSearch();
+  const [mode, setMode] = useState('ssr');
+  const [isFetching, setFetching] = useState(false);
   const [users, setUsers] = useState<GithubUser[]>(initData.items);
 
   const {
@@ -28,81 +41,77 @@ const useGithubSearchUsers = ({
     reset: resetRetry,
   } = useRetry(MAX_RETRY_ATTEMPTS, RETRY_DELAY_MS);
 
-  const [pager, setPager] = useState({
+  const pagerRef = useRef({
     page: Number(initParams.page) || 1,
-    loading: false,
-    mode: 'ssr' as 'ssr' | 'csr',
     totalCount: 0,
+    isEnded: false,
   });
 
-  const isEnded = users.length >= pager.totalCount && pager.totalCount > 0;
-  const loaderRef = useRef<HTMLDivElement | null>(null);
-
-  const updatePager = (state: Partial<typeof pager>) => {
-    setPager((prev) => ({ ...prev, ...state }));
-    if (state.page) {
-      updateParams({ page: `${state.page}` });
-    }
+  const updatePager = (state: Partial<typeof pagerRef.current>) => {
+    pagerRef.current = { ...pagerRef.current, ...state };
+    state.page && updateParams({ page: `${state.page}` });
   };
 
+  /**
+   * TODO
+   * 422 처리 -> 페이지 제거
+   */
   const fetchGithubUsers = async (opt = { page: 1, reset: false }) => {
-    if (!q || pager.loading || isRetryLimitExceeded) return;
+    if (!q || isRetryLimitExceeded) return;
 
     try {
-      updatePager({ loading: true });
+      setFetching(true);
       const data = await http.get('/api/github/search-users', { params: { q, page: opt.page } });
+      const { totalCount } = pagerRef.current;
 
+      setMode('csr');
       setUsers((prev) => {
         if (opt.reset) return data.items;
         return [...prev, ...data.items];
       });
-
       updatePager({
-        mode: 'csr',
         page: opt.page,
-        loading: false,
-        totalCount: data.total_count ?? pager.totalCount,
+        totalCount: data?.total_count ?? totalCount,
+        isEnded: data?.total_count > 0 && users.length >= data?.total_count,
       });
       resetRetry();
-    } catch (error: any) {
-      const isReset = error?.status === 422;
+    } catch {
       scheduleRetry(() => fetchGithubUsers(opt));
-      updatePager({ loading: false, page: isReset ? 1 : pager.page });
-      if (isReset) setUsers([]);
+    } finally {
+      setFetching(false);
     }
   };
 
   // 검색어 변경 시 첫 페이지를 다시 가져옴
+  // 단, 최초 렌더에서는 서버에서 받은 SSR 데이터를 그대로 사용하고 fetch 하지 않음
   useEffect(() => {
     if (initParams.q === q) return;
     resetRetry();
     fetchGithubUsers({ page: 1, reset: true });
-  }, [q, initParams.q, resetRetry]);
+  }, [q]);
 
-  // 무한 스크롤 옵저버
+  // 무한 스크롤: 스크롤 이벤트 + throttle + bottom 도달 감지
   useEffect(() => {
-    const target = loaderRef.current;
-    if (!target || isEnded) return;
+    const infinityFetchScroll = throttle(() => {
+      const { page, isEnded } = pagerRef.current;
+      const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
+      if (scrollTop + clientHeight + 500 <= scrollHeight || isEnded) return;
+      fetchGithubUsers({ page: page + 1, reset: false });
+    }, 500);
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const [entry] = entries;
-        if (!entry?.isIntersecting || pager.loading || isRetrying) return;
-        fetchGithubUsers({ page: pager.page + 1, reset: false });
-      },
-      { threshold: 0.1 },
-    );
+    window.addEventListener('scroll', infinityFetchScroll, { passive: true });
 
-    observer.observe(target);
-    return () => observer.disconnect();
-  }, [q, isEnded, pager.page, pager.loading, isRetrying]);
+    return () => {
+      window.removeEventListener('scroll', infinityFetchScroll);
+    };
+  }, []);
 
   return {
     users,
-    pager,
-    loaderRef,
     retryCount,
+    isServer: mode === 'ssr',
     isRetrying,
+    isFetching,
   };
 };
 

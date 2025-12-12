@@ -18,25 +18,13 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ q
       <Suspense>
         <Search />
       </Suspense>
-      <ul
-        className="
-          w-full
-          sm:max-w-md
-          md:max-w-lg
-          lg:max-w-2xl
-          xl:max-w-3xl
-          mx-auto
-          space-y-2
-        "
-      >
-        <Suspense>
-          <UserView initParams={params} initData={data}>
-            {data.items.map((item) => (
-              <User key={item.id} item={item} />
-            ))}
-          </UserView>
-        </Suspense>
-      </ul>
+      <Suspense>
+        <UserView initParams={params} initData={data}>
+          {data.items.map((item) => (
+            <User key={item.id} item={item} />
+          ))}
+        </UserView>
+      </Suspense>
     </>
   );
 }
