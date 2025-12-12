@@ -96,6 +96,25 @@ function filterByFollowersRange(ctx: TokenCtx) {
   };
 }
 
+function filterByCreatedRange(ctx: TokenCtx) {
+  const token = ctx.tokens.find((t) => t.startsWith('created:'));
+  if (!token) return () => true;
+
+  const raw = token.slice('created:'.length);
+  const m = raw.match(/^(\d{4}-\d{2}-\d{2})\.\.(\d{4}-\d{2}-\d{2})$/);
+  if (!m) return () => true;
+
+  const start = Date.parse(`${m[1]}T00:00:00.000Z`);
+  const end = Date.parse(`${m[2]}T23:59:59.999Z`);
+  if (!Number.isFinite(start) || !Number.isFinite(end)) return () => true;
+
+  return (u: MockUser) => {
+    const createdAt = typeof u.created_at === 'string' ? Date.parse(u.created_at) : NaN;
+    if (!Number.isFinite(createdAt)) return false;
+    return createdAt >= start && createdAt <= end;
+  };
+}
+
 function composeFilters(...filters: Array<(u: MockUser) => boolean>) {
   return (u: MockUser) => filters.every((fn) => fn(u));
 }
@@ -115,7 +134,7 @@ function installMockRoute(page: Page) {
       filterByIn(ctx),
       filterByReposRange(ctx),
       filterByFollowersRange(ctx),
-      // filterByCreatedRange(ctx),
+      filterByCreatedRange(ctx),
       // filterByLocationLanguage(ctx),
       // filterBySponsors(ctx),
     );
