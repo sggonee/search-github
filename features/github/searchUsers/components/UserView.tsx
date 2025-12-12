@@ -24,17 +24,7 @@ const UserView = ({
   });
 
   return (
-    <ul
-      className="
-        w-full
-        sm:max-w-md
-        md:max-w-lg
-        lg:max-w-2xl
-        xl:max-w-3xl
-        mx-auto
-        space-y-2
-      "
-    >
+    <ul className="w-full sm:max-w-md md:max-w-lg lg:max-w-2xl xl:max-w-3xl mx-auto space-y-2">
       {isServer ? <>{children}</> : users.map((item) => <User key={item.id} item={item} />)}
       {isLoading && (
         <div className="flex justify-center py-4">

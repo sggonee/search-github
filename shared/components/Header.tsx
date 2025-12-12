@@ -50,7 +50,7 @@ const SearchFilter: Record<string, { token: string; range: string[] }> = {
   sponsorable: { token: 'is:sponsorable', range: ['is:sponsorable'] },
 };
 
-const Search = () => {
+const Header = () => {
   const { updateParams } = useSearch();
   const searchParams = useSearchParams();
 
@@ -97,18 +97,7 @@ const Search = () => {
   };
 
   return (
-    <Box
-      component="section"
-      className="
-        w-full
-        sm:max-w-md
-        md:max-w-lg
-        lg:max-w-2xl
-        xl:max-w-3xl
-        mx-auto
-        mb-8
-      "
-    >
+    <Box component="header" className="w-full sm:max-w-md md:max-w-lg lg:max-w-2xl xl:max-w-3xl mx-auto">
       <Typography variant="h5" component="h1" className="mb-4 font-semibold">
         GitHub 사용자 검색
       </Typography>
@@ -167,4 +156,4 @@ const Search = () => {
   );
 };
 
-export default Search;
+export default Header;
