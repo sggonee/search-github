@@ -27,8 +27,8 @@ async function assertAllItemsType(res: any, expectedType: 'User' | 'Organization
   for (const u of json.items) expect(u.type).toBe(expectedType);
 }
 
-test.describe('Advanced: type filter', () => {
-  test('필터 토글에 따라 q 토큰과 API 응답(items[].type)이 일치한다', async ({ gotoHome, page }) => {
+test.describe('Advanced filter — type', () => {
+  test('type: toggles update q and API response', async ({ gotoHome, page }) => {
     await gotoHome();
 
     const input = page.locator('input[name="q"]');
@@ -38,7 +38,8 @@ test.describe('Advanced: type filter', () => {
     const userBtn = page.getByTestId('filter-user');
 
     // 기본 검색어
-    await input.fill('alice');
+    // org/user 각각 결과가 최소 1개 이상 나오도록 keyword를 분리
+    await input.fill('acme');
 
     // 1) type:org
     await orgBtn.click();
@@ -48,6 +49,7 @@ test.describe('Advanced: type filter', () => {
     await searchBtn.click();
     await assertAllItemsType(await orgResPromise, 'Organization');
 
+    await input.fill('alice');
     // 2) type:user
     await userBtn.click();
     await expect(input).toHaveValue(/type:user/);

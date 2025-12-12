@@ -106,6 +106,7 @@ const Header = () => {
               return (
                 <ListItemButton
                   key={item.key}
+                  data-testid={item.targetId}
                   className="px-1"
                   selected={isActive}
                   onClick={() => config && applySingleTokenFilter(config.token, config.range)}
