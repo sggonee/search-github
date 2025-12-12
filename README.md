@@ -4,6 +4,13 @@
 |-|-|-|-|
 |<img width="832" height="563" alt="image" src="https://github.com/user-attachments/assets/48ad7688-27e0-4da3-b95f-528f834b5cc7" />|<img width="841" height="610" alt="image" src="https://github.com/user-attachments/assets/2baef44f-cbbf-48c6-836a-a6945969f2af" />|<img width="916" height="233" alt="image" src="https://github.com/user-attachments/assets/42002c1e-3c39-4491-98bc-4f8798a3e10a" />|![infinite-scroll](https://github.com/user-attachments/assets/906b114c-72cf-4691-b491-dac9bb3de0ce)|
 
+# 실행 방법
+
+- `pnpm start` 를 입력하면 설치및 실행을 합니다.
+  - .env > `GITHUB_TOKEN=github_pat_xxxx` 토큰을 설정해주세요
+  - `Fine-grained personal access tokens` 를 사용했습니다.
+- `pnpm test:e2e` 를 입력하면 e2e 테스트를 시작합니다.
+
 # TODO
 
 - [x] 사용자 또는 조직만 검색
@@ -49,7 +56,7 @@
 - [x] 사용한 프롬프트
   - [x] 모든 프롬프트는 prompts/used_prompts.md 에 정리
 - [x] 테스트코드 (필수)
-  - [x] E2E 테스트 일부 지원
+  - [x] E2E 테스트 일부 지원 (테스트 코드가 제일 중요해보이는데 많이 미흡합니다. 🙇‍♂️)
   - [] 단위 테스트
 
 # Skill
