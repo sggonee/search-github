@@ -161,6 +161,40 @@ function filterBySponsors(ctx: TokenCtx) {
   };
 }
 
+function applySort(items: any[], ctx: TokenCtx) {
+  const sortToken = ctx.tokens.find((t) => t.startsWith('sort:'));
+  const orderToken = ctx.tokens.find((t) => t.startsWith('order:'));
+
+  const sort = sortToken ? sortToken.slice('sort:'.length) : '';
+  const order = orderToken ? orderToken.slice('order:'.length) : 'desc';
+  const dir = order === 'asc' ? 1 : -1;
+
+  const byNumber = (get: (u: any) => number) => {
+    return [...items].sort((a, b) => (get(a) - get(b)) * dir);
+  };
+
+  const byDate = (get: (u: any) => number) => {
+    return [...items].sort((a, b) => (get(a) - get(b)) * dir);
+  };
+
+  if (sort === 'followers') {
+    return byNumber((u) => (typeof u.followers === 'number' ? u.followers : 0));
+  }
+
+  if (sort === 'repositories' || sort === 'repos') {
+    return byNumber((u) => (typeof u.public_repos === 'number' ? u.public_repos : 0));
+  }
+
+  if (sort === 'joined' || sort === 'created') {
+    return byDate((u) => {
+      const v = typeof u.created_at === 'string' ? Date.parse(u.created_at) : NaN;
+      return Number.isFinite(v) ? v : 0;
+    });
+  }
+
+  return items;
+}
+
 function composeFilters(...filters: Array<(u: MockUser) => boolean>) {
   return (u: MockUser) => filters.every((fn) => fn(u));
 }
@@ -173,7 +207,13 @@ function installMockRoute(page: Page) {
     const url = new URL(route.request().url());
     const q = url.searchParams.get('q') ?? '';
 
-    const ctx = buildTokenCtx(q);
+    // UI가 sort/order를 q 토큰이 아니라 별도 query param으로 보낼 수도 있어 이를 흡수
+    const sort = url.searchParams.get('sort');
+    const order = url.searchParams.get('order');
+
+    const qPlus = [q, sort ? `sort:${sort}` : '', order ? `order:${order}` : ''].filter(Boolean).join(' ');
+
+    const ctx = buildTokenCtx(qPlus);
 
     const predicate = composeFilters(
       filterByType(ctx),
@@ -185,7 +225,8 @@ function installMockRoute(page: Page) {
       filterBySponsors(ctx),
     );
 
-    const items = mockUsers.filter((u: any) => predicate(u));
+    const filtered = mockUsers.filter((u: any) => predicate(u));
+    const items = applySort(filtered, ctx);
 
     await route.fulfill({
       status: 200,
