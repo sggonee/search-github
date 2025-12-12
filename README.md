@@ -101,3 +101,7 @@
 - 요청 값이 없을때 SSR 요청하지 않도록 수정
 - scroll event 에서 조회 되지 않는 이슈 수정
   - 검색값 없이 최초 진입 후, 검색하여 스크롤 요청시 호출되지 않는 현상 -> q 를 읽지 못하는 이슈 (useRef 로 수정)
+- MUI + Tailwind 를 같이 사용할때, MUI > emotion 이 스타일이 늦게 주입되면서 스타일이 적용 안되는 현상 확인
+  - MUI 는 컴포넌트 담당으로 분리
+  - Tailwind 는 layout 담당 전용으로 Box 로 처리
+- willReadFrequently 처리 -> 브라우저가 적합한 메모리를 사용할 수 있도록 canvas 에 willReadFrequently 옵션 추가
