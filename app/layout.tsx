@@ -16,7 +16,7 @@ export default function RootLayout({ children }: PropsWithChildren) {
         >
           <ThemeProvider>
             <Header />
-            <main className="flex min-h-screen w-full flex-col items-center sm:items-start px-4 sm:px-8 md:px-12 lg:px-16 py-8">
+            <main className="flex w-full flex-col items-center sm:items-start px-4 sm:px-8 md:px-12 lg:px-16 py-8">
               {children}
             </main>
           </ThemeProvider>

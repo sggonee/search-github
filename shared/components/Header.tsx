@@ -57,7 +57,7 @@ const Header = () => {
 
   return (
     <Box component="header" className="w-full sm:max-w-md md:max-w-lg lg:max-w-2xl xl:max-w-3xl mx-auto">
-      <Box className="mt-4 mb-4 font-semibold">
+      <Box className="pt-4 pb-4 font-semibold">
         <Typography variant="h5" component="h1">
           GitHub 사용자 검색
         </Typography>
