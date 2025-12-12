@@ -11,6 +11,78 @@ type Fixtures = {
   fillSearch: (q: string) => Promise<void>;
 };
 
+type MockUser = Record<string, any>;
+
+type TokenCtx = {
+  q: string;
+  tokens: string[];
+  hasToken: (t: string) => boolean;
+  keyword: string;
+};
+
+function buildTokenCtx(q: string): TokenCtx {
+  const tokens = q.trim().split(/\s+/).filter(Boolean);
+  const hasToken = (t: string) => tokens.includes(t);
+  const keyword = tokens.find((t) => !t.includes(':')) ?? '';
+  return { q, tokens, hasToken, keyword };
+}
+
+function matchText(keyword: string, value: unknown) {
+  if (!keyword) return true;
+  if (typeof value !== 'string') return false;
+  return value.toLowerCase().includes(keyword.toLowerCase());
+}
+
+function filterByType(ctx: TokenCtx) {
+  const isUserOnly = ctx.hasToken('type:user');
+  const isOrgOnly = ctx.hasToken('type:org');
+
+  return (u: MockUser) => {
+    if (isUserOnly && u.type !== 'User') return false;
+    if (isOrgOnly && u.type !== 'Organization') return false;
+    return true;
+  };
+}
+
+function filterByIn(ctx: TokenCtx) {
+  const inLogin = ctx.hasToken('in:login');
+  const inName = ctx.hasToken('in:name');
+  const inEmail = ctx.hasToken('in:email');
+  const kw = ctx.keyword;
+
+  return (u: MockUser) => {
+    // `in:`이 없으면 login 기본
+    if (!inLogin && !inName && !inEmail) return matchText(kw, u.login);
+
+    const hits: boolean[] = [];
+    if (inLogin) hits.push(matchText(kw, u.login));
+    if (inName) hits.push(matchText(kw, u.name));
+    if (inEmail) hits.push(matchText(kw, u.email));
+    return hits.some(Boolean);
+  };
+}
+
+function filterByReposRange(ctx: TokenCtx) {
+  const token = ctx.tokens.find((t) => t.startsWith('repos:'));
+  if (!token) return () => true;
+
+  const m = token.slice('repos:'.length).match(/^(\d+)\.\.(\d+)$/);
+  if (!m) return () => true;
+
+  const min = Number.parseInt(m[1], 10);
+  const max = Number.parseInt(m[2], 10);
+  if (!Number.isFinite(min) || !Number.isFinite(max)) return () => true;
+
+  return (u: MockUser) => {
+    const repos = typeof u.public_repos === 'number' ? u.public_repos : 0;
+    return repos >= min && repos <= max;
+  };
+}
+
+function composeFilters(...filters: Array<(u: MockUser) => boolean>) {
+  return (u: MockUser) => filters.every((fn) => fn(u));
+}
+
 function installMockRoute(page: Page) {
   // 중복 설치 방지(테스트가 여러 helper를 호출해도 안전하게)
   page.unroute('**/api/github/search-users**').catch(() => undefined);
@@ -18,71 +90,12 @@ function installMockRoute(page: Page) {
   return page.route('**/api/github/search-users**', async (route) => {
     const url = new URL(route.request().url());
     const q = url.searchParams.get('q') ?? '';
-    const tokens = q.trim().split(/\s+/).filter(Boolean);
 
-    const hasToken = (t: string) => tokens.includes(t);
-    const isUserOnly = hasToken('type:user');
-    const isOrgOnly = hasToken('type:org');
+    const ctx = buildTokenCtx(q);
 
-    // `in:` filters (default: login)
-    const inLogin = hasToken('in:login');
-    const inName = hasToken('in:name');
-    const inEmail = hasToken('in:email');
+    const predicate = composeFilters(filterByType(ctx), filterByIn(ctx), filterByReposRange(ctx));
 
-    // Treat the first non-qualifier token as keyword
-    // (qualifier examples: type:org, in:login, location:..., language:...)
-    const keyword = tokens.find((t) => !t.includes(':')) ?? '';
-
-    const matchText = (value: unknown) => {
-      if (!keyword) return true;
-      if (typeof value !== 'string') return false;
-      return value.toLowerCase().includes(keyword.toLowerCase());
-    };
-
-    // range helpers (repos)
-    const reposToken = tokens.find((t) => t.startsWith('repos:'));
-
-    const parseIntSafe = (v: string) => {
-      const n = Number.parseInt(v, 10);
-      return Number.isFinite(n) ? n : null;
-    };
-
-    const parseReposRange = (token: string) => {
-      // supports: repos:10..200
-      const raw = token.slice('repos:'.length);
-      const m = raw.match(/^(\d+)\.\.(\d+)$/);
-      if (!m) return null;
-      const min = parseIntSafe(m[1]);
-      const max = parseIntSafe(m[2]);
-      if (min == null || max == null) return null;
-      return { min, max };
-    };
-
-    const reposRange = reposToken ? parseReposRange(reposToken) : null;
-
-    const matchReposRange = (u: any) => {
-      if (!reposRange) return true;
-      const repos = typeof u.public_repos === 'number' ? u.public_repos : 0;
-      return repos >= reposRange.min && repos <= reposRange.max;
-    };
-
-    const matchByInFilter = (u: any) => {
-      // if no `in:` specified, default behavior: login
-      if (!inLogin && !inName && !inEmail) return matchText(u.login);
-
-      const hits: boolean[] = [];
-      if (inLogin) hits.push(matchText(u.login));
-      if (inName) hits.push(matchText(u.name));
-      if (inEmail) hits.push(matchText(u.email));
-      return hits.some(Boolean);
-    };
-
-    const items = mockUsers.filter((u: any) => {
-      if (isUserOnly && u.type !== 'User') return false;
-      if (isOrgOnly && u.type !== 'Organization') return false;
-      if (!matchByInFilter(u)) return false;
-      return matchReposRange(u);
-    });
+    const items = mockUsers.filter((u: any) => predicate(u));
 
     await route.fulfill({
       status: 200,
