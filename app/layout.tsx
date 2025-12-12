@@ -1,6 +1,6 @@
 import Header from '@/shared/components/Header';
 import { AppRouterCacheProvider } from '@mui/material-nextjs/v15-appRouter';
-import type { PropsWithChildren } from 'react';
+import { Suspense, type PropsWithChildren } from 'react';
 import './globals.css';
 import ThemeProvider from './provider/ThemeProvider';
 
@@ -15,7 +15,9 @@ export default function RootLayout({ children }: PropsWithChildren) {
           }}
         >
           <ThemeProvider>
-            <Header />
+            <Suspense>
+              <Header />
+            </Suspense>
             <main className="flex w-full flex-col items-center sm:items-start px-4 sm:px-8 md:px-12 lg:px-16 py-8">
               {children}
             </main>
