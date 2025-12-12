@@ -149,6 +149,18 @@ function filterByLocationLanguage(ctx: TokenCtx) {
   };
 }
 
+function filterBySponsors(ctx: TokenCtx) {
+  const enabled = ctx.tokens.some((t) => t === 'sponsors:true' || t === 'sponsorable:true' || t === 'is:sponsorable');
+  if (!enabled) return () => true;
+
+  return (u: MockUser) => {
+    // mockUsers에 필드가 없을 수 있어, 없으면 통과(테스트 안정성)
+    const v = (u.sponsors ?? u.sponsorable) as unknown;
+    if (typeof v !== 'boolean') return true;
+    return v === true;
+  };
+}
+
 function composeFilters(...filters: Array<(u: MockUser) => boolean>) {
   return (u: MockUser) => filters.every((fn) => fn(u));
 }
@@ -170,7 +182,7 @@ function installMockRoute(page: Page) {
       filterByFollowersRange(ctx),
       filterByCreatedRange(ctx),
       filterByLocationLanguage(ctx),
-      // filterBySponsors(ctx),
+      filterBySponsors(ctx),
     );
 
     const items = mockUsers.filter((u: any) => predicate(u));
