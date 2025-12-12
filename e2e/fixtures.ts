@@ -79,6 +79,23 @@ function filterByReposRange(ctx: TokenCtx) {
   };
 }
 
+function filterByFollowersRange(ctx: TokenCtx) {
+  const token = ctx.tokens.find((t) => t.startsWith('followers:'));
+  if (!token) return () => true;
+
+  const m = token.slice('followers:'.length).match(/^(\d+)\.\.(\d+)$/);
+  if (!m) return () => true;
+
+  const min = Number.parseInt(m[1], 10);
+  const max = Number.parseInt(m[2], 10);
+  if (!Number.isFinite(min) || !Number.isFinite(max)) return () => true;
+
+  return (u: MockUser) => {
+    const followers = typeof u.followers === 'number' ? u.followers : 0;
+    return followers >= min && followers <= max;
+  };
+}
+
 function composeFilters(...filters: Array<(u: MockUser) => boolean>) {
   return (u: MockUser) => filters.every((fn) => fn(u));
 }
@@ -93,7 +110,15 @@ function installMockRoute(page: Page) {
 
     const ctx = buildTokenCtx(q);
 
-    const predicate = composeFilters(filterByType(ctx), filterByIn(ctx), filterByReposRange(ctx));
+    const predicate = composeFilters(
+      filterByType(ctx),
+      filterByIn(ctx),
+      filterByReposRange(ctx),
+      filterByFollowersRange(ctx),
+      // filterByCreatedRange(ctx),
+      // filterByLocationLanguage(ctx),
+      // filterBySponsors(ctx),
+    );
 
     const items = mockUsers.filter((u: any) => predicate(u));
 
