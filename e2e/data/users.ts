@@ -1,4 +1,18 @@
-export const mockUsers = [
+type MockUser = {
+  id: number;
+  login: string;
+  name?: string;
+  email?: string;
+  followers: number;
+  public_repos: number;
+  location?: string;
+  language?: string;
+  created_at: string;
+  sponsorable: boolean;
+  type: 'User' | 'Organization';
+};
+
+const seed: MockUser[] = [
   {
     id: 1,
     login: 'alice',
@@ -115,3 +129,29 @@ export const mockUsers = [
     type: 'Organization',
   },
 ];
+
+// 스크롤/페이지네이션 테스트를 위해 충분히 큰 데이터셋을 생성
+const generatedUsers: MockUser[] = Array.from({ length: 120 }, (_, i) => {
+  const n = i + 1;
+  const padded = String(n).padStart(3, '0');
+
+  // 다양성 확보
+  const locations = ['Seoul', 'Busan', 'Tokyo', 'New York', 'Berlin', 'Remote'];
+  const languages = ['TypeScript', 'JavaScript', 'Python', 'Go', 'Java', 'Rust'];
+
+  return {
+    id: 1000 + n,
+    login: `user-${padded}`,
+    name: `User ${padded}`,
+    email: `user-${padded}@test.dev`,
+    followers: (n * 37) % 5000,
+    public_repos: (n * 13) % 300,
+    location: locations[n % locations.length],
+    language: languages[n % languages.length],
+    created_at: `20${10 + (n % 15)}-${String((n % 12) + 1).padStart(2, '0')}-${String((n % 28) + 1).padStart(2, '0')}`,
+    sponsorable: n % 3 === 0,
+    type: 'User',
+  };
+});
+
+export const mockUsers: MockUser[] = [...seed, ...generatedUsers];
