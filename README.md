@@ -1,5 +1,9 @@
 # search-github
 
+|검색 필터| 검색 결과 | 재요청 | 무한 스크롤 |
+|-|-|-|-|
+|<img width="832" height="563" alt="image" src="https://github.com/user-attachments/assets/48ad7688-27e0-4da3-b95f-528f834b5cc7" />|<img width="841" height="610" alt="image" src="https://github.com/user-attachments/assets/2baef44f-cbbf-48c6-836a-a6945969f2af" />|<img width="916" height="233" alt="image" src="https://github.com/user-attachments/assets/42002c1e-3c39-4491-98bc-4f8798a3e10a" />|![infinite-scroll](https://github.com/user-attachments/assets/906b114c-72cf-4691-b491-dac9bb3de0ce)|
+
 # TODO
 
 - [x] 사용자 또는 조직만 검색
