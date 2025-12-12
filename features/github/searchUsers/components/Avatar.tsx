@@ -53,7 +53,8 @@ export default function User({ url }: Props) {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const ctx = canvas.getContext('2d');
+    // getImageData 를 사용할 예정이므로 willReadFrequently 힌트를 줘서 성능 경고를 줄입니다.
+    const ctx = canvas.getContext('2d', { willReadFrequently: true } as CanvasRenderingContext2DSettings);
     if (!ctx) return;
 
     const img = new Image();
