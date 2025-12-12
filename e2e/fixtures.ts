@@ -2,7 +2,7 @@ import { test as base, expect, type Page } from '@playwright/test';
 import { mockUsers } from './data/users';
 
 const PORT = Number(process.env.PORT ?? 3000);
-const BASE_URL = `http://localhost:${PORT}`;
+const BASE_URL = process.env.PLAYWRIGHT_BASE_URL ?? `http://127.0.0.1:${PORT}`;
 
 type Fixtures = {
   page: Page;
@@ -39,6 +39,33 @@ function installMockRoute(page: Page) {
       return value.toLowerCase().includes(keyword.toLowerCase());
     };
 
+    // range helpers (repos)
+    const reposToken = tokens.find((t) => t.startsWith('repos:'));
+
+    const parseIntSafe = (v: string) => {
+      const n = Number.parseInt(v, 10);
+      return Number.isFinite(n) ? n : null;
+    };
+
+    const parseReposRange = (token: string) => {
+      // supports: repos:10..200
+      const raw = token.slice('repos:'.length);
+      const m = raw.match(/^(\d+)\.\.(\d+)$/);
+      if (!m) return null;
+      const min = parseIntSafe(m[1]);
+      const max = parseIntSafe(m[2]);
+      if (min == null || max == null) return null;
+      return { min, max };
+    };
+
+    const reposRange = reposToken ? parseReposRange(reposToken) : null;
+
+    const matchReposRange = (u: any) => {
+      if (!reposRange) return true;
+      const repos = typeof u.public_repos === 'number' ? u.public_repos : 0;
+      return repos >= reposRange.min && repos <= reposRange.max;
+    };
+
     const matchByInFilter = (u: any) => {
       // if no `in:` specified, default behavior: login
       if (!inLogin && !inName && !inEmail) return matchText(u.login);
@@ -53,7 +80,8 @@ function installMockRoute(page: Page) {
     const items = mockUsers.filter((u: any) => {
       if (isUserOnly && u.type !== 'User') return false;
       if (isOrgOnly && u.type !== 'Organization') return false;
-      return matchByInFilter(u);
+      if (!matchByInFilter(u)) return false;
+      return matchReposRange(u);
     });
 
     await route.fulfill({
