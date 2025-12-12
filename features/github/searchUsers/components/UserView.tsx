@@ -16,7 +16,7 @@ const UserView = ({
   initData: GithubSearchUsers | { items: GithubUser[] };
 }>) => {
   const searchParams = useSearchParams();
-  const { users, retryCount, isServer, isFetching, isRetrying } = useGithubSearchUsers({
+  const { users, retryCount, isServer, isLoading, isRetrying } = useGithubSearchUsers({
     q: searchParams.get('q') ?? '',
     initParams,
     initData,
@@ -35,7 +35,7 @@ const UserView = ({
       "
     >
       {isServer ? <>{children}</> : users.map((item) => <User key={item.id} item={item} />)}
-      {isFetching && <div className="text-center py-4 text-sm text-gray-400">Loading...</div>}
+      {isLoading && <div className="text-center py-4 text-sm text-gray-400">Loading...</div>}
       {isRetrying && (
         <div className="text-center py-2 text-xs text-orange-500">
           요청 재시도 중... ({retryCount} / {5})

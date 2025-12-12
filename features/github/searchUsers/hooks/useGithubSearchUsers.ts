@@ -1,4 +1,3 @@
-import useSearch from '@/shared/hooks/useSearch';
 import useRetry from '@/shared/hooks/useTry';
 import http from '@/shared/http';
 import { useEffect, useRef, useState } from 'react';
@@ -28,9 +27,8 @@ const useGithubSearchUsers = ({
   initParams: { q: string; page: string };
   initData: GithubSearchUsers | { items: GithubUser[] };
 }) => {
-  const { updateParams } = useSearch();
   const [mode, setMode] = useState('ssr');
-  const [isFetching, setFetching] = useState(false);
+  const [isLoading, setLoading] = useState(false);
   const [users, setUsers] = useState<GithubUser[]>(initData.items);
 
   const {
@@ -42,25 +40,22 @@ const useGithubSearchUsers = ({
   } = useRetry(MAX_RETRY_ATTEMPTS, RETRY_DELAY_MS);
 
   const pagerRef = useRef({
-    page: Number(initParams.page) || 1,
+    page: 1,
     totalCount: 0,
+    isFetching: false,
     isEnded: false,
   });
 
   const updatePager = (state: Partial<typeof pagerRef.current>) => {
     pagerRef.current = { ...pagerRef.current, ...state };
-    state.page && updateParams({ page: `${state.page}` });
   };
 
-  /**
-   * TODO
-   * 422 처리 -> 페이지 제거
-   */
   const fetchGithubUsers = async (opt = { page: 1, reset: false }) => {
     if (!q || isRetryLimitExceeded) return;
 
     try {
-      setFetching(true);
+      setLoading(true);
+      updatePager({ isFetching: true });
       const data = await http.get('/api/github/search-users', { params: { q, page: opt.page } });
       const { totalCount } = pagerRef.current;
 
@@ -78,7 +73,8 @@ const useGithubSearchUsers = ({
     } catch {
       scheduleRetry(() => fetchGithubUsers(opt));
     } finally {
-      setFetching(false);
+      setLoading(false);
+      updatePager({ isFetching: false });
     }
   };
 
@@ -92,17 +88,20 @@ const useGithubSearchUsers = ({
 
   // 무한 스크롤: 스크롤 이벤트 + throttle + bottom 도달 감지
   useEffect(() => {
-    const infinityFetchScroll = throttle(() => {
-      const { page, isEnded } = pagerRef.current;
+    const infiniteScrolling = throttle(() => {
+      const { page, isEnded, isFetching } = pagerRef.current;
       const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
-      if (scrollTop + clientHeight + 500 <= scrollHeight || isEnded) return;
-      fetchGithubUsers({ page: page + 1, reset: false });
-    }, 500);
+      const isReached = scrollTop + clientHeight + 500 <= scrollHeight;
 
-    window.addEventListener('scroll', infinityFetchScroll, { passive: true });
+      if (isFetching || isEnded || isReached) return;
+
+      fetchGithubUsers({ page: page + 1, reset: false });
+    }, 200);
+
+    window.addEventListener('scroll', infiniteScrolling, { passive: true });
 
     return () => {
-      window.removeEventListener('scroll', infinityFetchScroll);
+      window.removeEventListener('scroll', infiniteScrolling);
     };
   }, []);
 
@@ -111,7 +110,7 @@ const useGithubSearchUsers = ({
     retryCount,
     isServer: mode === 'ssr',
     isRetrying,
-    isFetching,
+    isLoading,
   };
 };
 
