@@ -23,28 +23,30 @@
 - [x] 시스템 연동 다크 모드 지원
 - [x] 폰트 폴백: 애플 기본 > Noto
 - [x] 정렬 조건: 기본, followers, repositories, joined 지원 + DESC
+- [x] Cypress 를 통한 E2E 테스트 지원
 - [] Jest 를 통한 유닛 테스트 지원
-- [] Cypress 를 통한 E2E 테스트 지원
 
 # Test Condition
 
 - [] 필수 테스트 대상
-  - [] 검색 쿼리, 정렬, 페이징 로직
+  - [x] e2e 검색 쿼리
+  - [x] e2e 정렬
+  - [] 페이징 로직
   - [] 데이터 매핑, 표시 안전성
   - [] SSR, CSR 경계 로직
-- [] (옵션, 추가점수) 위 내용 외에 추가 테스트 건당 추가 점수를 부여합니다.
 
 # Submission
 
-- [] 전체 소스코드
-- [] README.md
+- [x] 전체 소스코드
+- [x] README.md
   - [] 실행 및 테스트 방법
-  - [] 구현 스펙 명세
-  - [] MUI 와 Tailwind CSS 같이 사용할 때 주의할 점
-- [] 사용한 프롬프트
-  - [] 모든 프롬프트는 prompts/used_prompts.md 에 정리
-- [] 테스트코드 (필수)
-  - [] 단위 테스트 또는 통합테스트, E2E 테스트 지원
+  - [x] 구현 스펙 명세
+  - [x] MUI 와 Tailwind CSS 같이 사용할 때 주의할 점
+- [x] 사용한 프롬프트
+  - [x] 모든 프롬프트는 prompts/used_prompts.md 에 정리
+- [x] 테스트코드 (필수)
+  - [x] E2E 테스트 일부 지원
+  - [] 단위 테스트
 
 # Skill
 
@@ -53,8 +55,9 @@
 - [x] ESLint + Prettier
 - [x] ES2023 + Next.js + TypeScript (Next.js App Router)
 - [x] MUI + Tailwind CSS
-- [] Redux Toolkit
-- [] Cypress + Jest
+- [x] Cypress(Playwright cypress 를 깜박하고 Playwright 으로 진행해버렸습니다...)
+- [] Jest
+- [] Redux Toolkit (미사용)
 
 # 작업순서 기록
 
@@ -106,3 +109,4 @@
   - Tailwind 는 layout 담당 전용으로 Box 로 처리
 - willReadFrequently 처리 -> 브라우저가 적합한 메모리를 사용할 수 있도록 canvas 에 willReadFrequently 옵션 추가
 - sort(follower, join, repository) + decs 필터로직 추가
+- prompt 이용하여 e2e 코드 추가
