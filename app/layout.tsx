@@ -1,4 +1,4 @@
-import Search from '@/shared/components/Header';
+import Header from '@/shared/components/Header';
 import { AppRouterCacheProvider } from '@mui/material-nextjs/v15-appRouter';
 import type { PropsWithChildren } from 'react';
 import './globals.css';
@@ -15,7 +15,7 @@ export default function RootLayout({ children }: PropsWithChildren) {
           }}
         >
           <ThemeProvider>
-            <Search />
+            <Header />
             <main className="flex min-h-screen w-full flex-col items-center sm:items-start px-4 sm:px-8 md:px-12 lg:px-16 py-8">
               {children}
             </main>
