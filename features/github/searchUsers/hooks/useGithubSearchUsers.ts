@@ -19,7 +19,12 @@ const throttle = <T extends (...args: any[]) => void>(fn: T, delay: number) => {
   };
 };
 
+const encodeSearchParams = (q: string) => {
+  return new URLSearchParams(q).entries().reduce((acc, [key, value]) => ({ ...acc, [key]: value }), {});
+};
+
 const useGithubSearchUsers = ({ initData }: { initData: GithubSearchUsers | { items: GithubUser[] } }) => {
+  const didMountRef = useRef(false);
   const searchParams = useSearchParams();
   const [mode, setMode] = useState('ssr');
   const [isLoading, setLoading] = useState(false);
@@ -45,8 +50,12 @@ const useGithubSearchUsers = ({ initData }: { initData: GithubSearchUsers | { it
     pagerRef.current = { ...pagerRef.current, ...state };
   };
 
-  const encodeSearchParams = (q: string) => {
-    return new URLSearchParams(q).entries().reduce((acc, [key, value]) => ({ ...acc, [key]: value }), {});
+  const isMounted = () => {
+    if (!didMountRef.current) {
+      didMountRef.current = true;
+      return false;
+    }
+    return didMountRef.current;
   };
 
   const fetchGithubUsers = async (q: string, opt = { page: 1, reset: false }) => {
@@ -80,15 +89,12 @@ const useGithubSearchUsers = ({ initData }: { initData: GithubSearchUsers | { it
     }
   };
 
-  // 검색어 변경 시 첫 페이지를 다시 가져옴
-  // 단, 최초 렌더에서는 서버에서 받은 SSR 데이터를 그대로 사용하고 fetch 하지 않음
   useEffect(() => {
-    const q = searchParams.toString();
+    if (!isMounted()) return;
     resetRetry();
-    fetchGithubUsers(q, { page: 1, reset: true });
+    fetchGithubUsers(searchParams.toString(), { page: 1, reset: true });
   }, [searchParams]);
 
-  // 무한 스크롤: 스크롤 이벤트 + throttle + bottom 도달 감지
   useEffect(() => {
     const infiniteScrolling = throttle(() => {
       const { q, page, isEnded, isFetching } = pagerRef.current;
