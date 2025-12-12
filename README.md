@@ -93,3 +93,11 @@
   - 모든 데이터 호출했을때 데이터 호출 방지
 - retry 로직 적용
 - retry, search github hook 분리
+- observer api -> scroll + throttle 조합으로 변경
+  - 최초 진입하거나, 데이터량이 적을때 자동 호출되는 이슈 해결
+  - scroll 상태를 state -> useRef 로 변경하여 상태 의존성 낮춤
+- 422 에러 헨들링
+  - url 에서 page query 제거 -> SSR 에서 올바른 요청이 아닌경우 에러 발생
+- 요청 값이 없을때 SSR 요청하지 않도록 수정
+- scroll event 에서 조회 되지 않는 이슈 수정
+  - 검색값 없이 최초 진입 후, 검색하여 스크롤 요청시 호출되지 않는 현상 -> q 를 읽지 못하는 이슈 (useRef 로 수정)
