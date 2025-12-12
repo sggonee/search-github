@@ -98,9 +98,11 @@ const Header = () => {
 
   return (
     <Box component="header" className="w-full sm:max-w-md md:max-w-lg lg:max-w-2xl xl:max-w-3xl mx-auto">
-      <Typography variant="h5" component="h1" className="mb-4 font-semibold">
-        GitHub 사용자 검색
-      </Typography>
+      <Box className="mt-4 mb-4 font-semibold">
+        <Typography variant="h5" component="h1">
+          GitHub 사용자 검색
+        </Typography>
+      </Box>
 
       <Paper key={q} component="form" onSubmit={onSubmit} elevation={3} className="w-full px-3 py-3 space-y-3">
         <TextField
