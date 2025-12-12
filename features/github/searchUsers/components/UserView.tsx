@@ -1,5 +1,6 @@
 'use client';
 
+import CircularProgress from '@mui/material/CircularProgress';
 import { useSearchParams } from 'next/navigation';
 import { PropsWithChildren } from 'react';
 import { GithubUser } from '../../user/interface';
@@ -35,7 +36,11 @@ const UserView = ({
       "
     >
       {isServer ? <>{children}</> : users.map((item) => <User key={item.id} item={item} />)}
-      {isLoading && <div className="text-center py-4 text-sm text-gray-400">Loading...</div>}
+      {isLoading && (
+        <div className="flex justify-center py-4">
+          <CircularProgress size={22} thickness={4} />
+        </div>
+      )}
       {isRetrying && (
         <div className="text-center py-2 text-xs text-orange-500">
           요청 재시도 중... ({retryCount} / {5})
