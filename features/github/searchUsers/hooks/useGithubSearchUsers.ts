@@ -40,6 +40,7 @@ const useGithubSearchUsers = ({
   } = useRetry(MAX_RETRY_ATTEMPTS, RETRY_DELAY_MS);
 
   const pagerRef = useRef({
+    q,
     page: 1,
     totalCount: 0,
     isFetching: false,
@@ -50,7 +51,7 @@ const useGithubSearchUsers = ({
     pagerRef.current = { ...pagerRef.current, ...state };
   };
 
-  const fetchGithubUsers = async (opt = { page: 1, reset: false }) => {
+  const fetchGithubUsers = async (q: string, opt = { page: 1, reset: false }) => {
     if (!q || isRetryLimitExceeded) return;
 
     try {
@@ -65,13 +66,14 @@ const useGithubSearchUsers = ({
         return [...prev, ...data.items];
       });
       updatePager({
+        q,
         page: opt.page,
         totalCount: data?.total_count ?? totalCount,
         isEnded: data?.total_count > 0 && users.length >= data?.total_count,
       });
       resetRetry();
     } catch {
-      scheduleRetry(() => fetchGithubUsers(opt));
+      scheduleRetry(() => fetchGithubUsers(q, opt));
     } finally {
       setLoading(false);
       updatePager({ isFetching: false });
@@ -83,19 +85,19 @@ const useGithubSearchUsers = ({
   useEffect(() => {
     if (initParams.q === q) return;
     resetRetry();
-    fetchGithubUsers({ page: 1, reset: true });
+    fetchGithubUsers(q, { page: 1, reset: true });
   }, [q]);
 
   // 무한 스크롤: 스크롤 이벤트 + throttle + bottom 도달 감지
   useEffect(() => {
     const infiniteScrolling = throttle(() => {
-      const { page, isEnded, isFetching } = pagerRef.current;
+      const { q, page, isEnded, isFetching } = pagerRef.current;
       const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
       const isReached = scrollTop + clientHeight + 500 <= scrollHeight;
 
       if (isFetching || isEnded || isReached) return;
 
-      fetchGithubUsers({ page: page + 1, reset: false });
+      fetchGithubUsers(q, { page: page + 1, reset: false });
     }, 200);
 
     window.addEventListener('scroll', infiniteScrolling, { passive: true });
