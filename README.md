@@ -7,8 +7,8 @@
 # 실행 방법
 
 - `pnpm start` 를 입력하면 설치 -> 빌드 -> 실행 순서로 진행됩니다. ([http://localhost:3000](http://localhost:3000))
-  - .env > `GITHUB_TOKEN=github_pat_xxxx` 토큰을 설정해주세요
-  - `Fine-grained personal access tokens` 를 사용했습니다.
+  - .env 생성하고, `GITHUB_TOKEN=github_pat_xxxx` 토큰을 설정해주세요
+    - `Fine-grained personal access tokens` 를 사용했습니다.
 - `pnpm test:e2e` 를 입력하면 e2e 테스트를 시작합니다.
 
 # TODO
@@ -30,34 +30,34 @@
 - [x] 사용자 아바타 이미지 처리: HTML5 Canvas + WebAssembly 를 통해 랜더링
 - [x] 모든 GitHub 호출은 서버 라우트에서 Authorization: token 사용
 - [x] 레이트리밋 초과 시 재시도, 남은 쿼터 노출
-- [x] 머터리얼 디자인 칼라 팔레트 지원
 - [x] 시스템 연동 다크 모드 지원
 - [x] 폰트 폴백: 애플 기본 > Noto
 - [x] 정렬 조건: 기본, followers, repositories, joined 지원 + DESC
 - [x] Cypress 를 통한 E2E 테스트 지원
-- [] Jest 를 통한 유닛 테스트 지원
+- [ ] 머터리얼 디자인 칼라 팔레트 지원
+- [ ] Jest 를 통한 유닛 테스트 지원
 
 # Test Condition
 
-- [] 필수 테스트 대상
+- 필수 테스트 대상
   - [x] e2e 검색 쿼리
   - [x] e2e 정렬
-  - [] 페이징 로직
-  - [] 데이터 매핑, 표시 안전성
-  - [] SSR, CSR 경계 로직
+  - [ ] 페이징 로직
+  - [ ] 데이터 매핑, 표시 안전성
+  - [ ] SSR, CSR 경계 로직
 
 # Submission
 
 - [x] 전체 소스코드
 - [x] README.md
-  - [] 실행 및 테스트 방법
+  - [x] 실행 및 테스트 방법
   - [x] 구현 스펙 명세
   - [x] MUI 와 Tailwind CSS 같이 사용할 때 주의할 점
-- [x] 사용한 프롬프트
+- 사용한 프롬프트
   - [x] 모든 프롬프트는 prompts/used_prompts.md 에 정리
-- [x] 테스트코드 (필수)
+- 테스트코드 (필수)
   - [x] E2E 테스트 일부 지원 (테스트 코드가 제일 중요해보이는데 많이 미흡합니다. 🙇‍♂️)
-  - [] 단위 테스트
+  - [ ] 단위 테스트
 
 # Skill
 
@@ -67,8 +67,8 @@
 - [x] ES2023 + Next.js + TypeScript (Next.js App Router)
 - [x] MUI + Tailwind CSS
 - [x] Cypress(Playwright cypress 를 깜박하고 Playwright 으로 진행해버렸습니다...)
-- [] Jest
-- [] Redux Toolkit (미사용)
+- [ ] Jest
+- [ ] Redux Toolkit (미사용)
 
 # 작업순서 기록
 
